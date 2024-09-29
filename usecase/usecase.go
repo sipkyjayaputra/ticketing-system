@@ -26,6 +26,13 @@ type Usecase interface {
 	UpdateTicket(dto.Ticket, uint, string) (*utils.ResponseContainer, *utils.ErrorContainer)
 	DeleteTicket(string) (*utils.ResponseContainer, *utils.ErrorContainer)
 	GetTicketById(string) (*utils.ResponseContainer, *utils.ErrorContainer)
+
+	// ACTIVITY
+	GetActivitiesByTicketNo(string) (*utils.ResponseContainer, *utils.ErrorContainer)
+	AddActivity(dto.Activity, uint) (*utils.ResponseContainer, *utils.ErrorContainer)
+	UpdateActivity(dto.Activity, uint, uint) (*utils.ResponseContainer, *utils.ErrorContainer)
+	DeleteActivity(uint) (*utils.ResponseContainer, *utils.ErrorContainer)
+	GetActivityById(uint) (*utils.ResponseContainer, *utils.ErrorContainer)
 }
 
 type usecase struct {

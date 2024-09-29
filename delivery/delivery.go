@@ -25,6 +25,13 @@ type Delivery interface {
 	UpdateTicket(*gin.Context)
 	DeleteTicket(*gin.Context)
 	GetTicketById(*gin.Context)
+
+	// ACTIVITY
+	GetActivitiesByTicketNo(*gin.Context)
+	AddActivity(*gin.Context)
+	UpdateActivity(*gin.Context)
+	DeleteActivity(*gin.Context)
+	GetActivityById(*gin.Context)
 }
 
 type delivery struct {

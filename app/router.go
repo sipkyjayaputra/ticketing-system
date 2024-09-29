@@ -44,6 +44,13 @@ func InitRouter(db *gorm.DB, logger *logrus.Logger, cache *redis.Client) *gin.En
 		protectedRoutes.PUT("tickets/:id", del.UpdateTicket)
 		protectedRoutes.GET("tickets/:id", del.GetTicketById)
 		protectedRoutes.DELETE("tickets/:id", middleware.AdminAccess(), del.DeleteTicket)
+
+		// ACTIVITY
+		protectedRoutes.GET("activities", del.GetActivitiesByTicketNo) // Retrieve activities by ticket number
+		protectedRoutes.POST("activities", del.AddActivity)            // Add activity to a ticket
+		protectedRoutes.PUT("activities/:id", del.UpdateActivity)      // Update an existing activity
+		protectedRoutes.GET("activities/:id", del.GetActivityById)     // Get a specific activity by ID
+		protectedRoutes.DELETE("activities/:id", del.DeleteActivity)   // Delete an activity
 	}
 	// AUTH
 	router.POST("/auth/sign-in", del.SignIn)

@@ -26,6 +26,13 @@ type Repository interface {
 	UpdateTicket(dto.Ticket) error
 	DeleteTicket(string) error
 	GetTicketById(string) (*entity.Ticket, error)
+
+	// ACTIVITY
+	GetActivitiesByTicketNo(ticketNo string) ([]entity.Activity, error)
+	AddActivity(activity dto.Activity) error
+	UpdateActivity(activity dto.Activity) error
+	DeleteActivity(activityID uint) error
+	GetActivityById(activityID uint) (*entity.Activity, error)
 }
 
 type repository struct {
