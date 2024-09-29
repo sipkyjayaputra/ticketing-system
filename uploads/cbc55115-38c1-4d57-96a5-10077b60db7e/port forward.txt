@@ -1,0 +1,3 @@
+kubectl port-forward deployment/foundation 8443:8443 --kubeconfig vini-dev-k8s.yaml
+
+kubectl port-forward deployment/foundation 8443:8443 --kubeconfig vini-stg-k8s.yaml
