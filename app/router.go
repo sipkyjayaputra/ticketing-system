@@ -1,12 +1,13 @@
 package app
 
 import (
+	"net/http"
+
 	"github.com/sipkyjayaputra/ticketing-system/delivery"
 	"github.com/sipkyjayaputra/ticketing-system/middleware"
 	"github.com/sipkyjayaputra/ticketing-system/repository"
 	"github.com/sipkyjayaputra/ticketing-system/usecase"
 	"github.com/sipkyjayaputra/ticketing-system/utils"
-	"net/http"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -30,12 +31,21 @@ func InitRouter(db *gorm.DB, logger *logrus.Logger, cache *redis.Client) *gin.En
 	protectedRoutes := router.Group("/")
 	protectedRoutes.Use(middleware.Authorization())
 	{
+		// USERS
 		protectedRoutes.GET("users", middleware.AdminAccess(), del.GetUsers)
 		protectedRoutes.POST("users", middleware.AdminAccess(), del.AddUser)
 		protectedRoutes.PUT("users/:id", del.UpdateUser)
 		protectedRoutes.GET("users/:id", del.GetUserById)
 		protectedRoutes.DELETE("users/:id", middleware.AdminAccess(), del.DeleteUser)
+
+		// TICKET
+		protectedRoutes.GET("tickets", middleware.AdminAccess(), del.GetTickets)
+		protectedRoutes.POST("tickets", middleware.AdminAccess(), del.AddTicket)
+		protectedRoutes.PUT("tickets/:id", del.UpdateTicket)
+		protectedRoutes.GET("tickets/:id", del.GetTicketById)
+		protectedRoutes.DELETE("tickets/:id", middleware.AdminAccess(), del.DeleteTicket)
 	}
+	// AUTH
 	router.POST("/auth/sign-in", del.SignIn)
 	router.POST("/auth/sign-up", del.AddUser)
 	router.POST("/auth/refresh-token", del.RefreshToken)

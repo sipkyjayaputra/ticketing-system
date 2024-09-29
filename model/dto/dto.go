@@ -2,6 +2,7 @@ package dto
 
 import (
 	"encoding/json"
+	"mime/multipart"
 	"time"
 )
 
@@ -28,11 +29,11 @@ type RefreshToken struct {
 
 type Ticket struct {
 	TicketNo   string          `json:"ticket_no"`
-	Reporter   User            `json:"reporter"`
+	ReporterID uint            `json:"reporter_id"`
 	TicketType string          `json:"ticket_type"`
 	Subject    string          `json:"subject"`
 	ReportDate time.Time       `json:"report_date"`
-	Assigned   User            `json:"assigned"`
+	AssignedID uint            `json:"assigned_id"`
 	Priority   string          `json:"priority"`
 	Status     string          `json:"status"`
 	Content    json.RawMessage `json:"content"`
@@ -44,21 +45,21 @@ type Ticket struct {
 }
 
 type Activity struct {
-	ActivityID  uint       `json:"activity_id"`
-	TicketNo    string     `json:"ticket_no"`
-	Description string     `json:"description"`
-	Files       []Document `json:"files"`
-	CreatedBy   uint       `json:"created_by,omitempty"` // ID of the creator
-	UpdatedBy   uint       `json:"updated_by,omitempty"` // ID of the last updater
-	CreatedAt   time.Time  `json:"created_at"`           // Activity creation timestamp
-	UpdatedAt   time.Time  `json:"updated_at"`           // Activity update timestamp
+	ActivityID  uint                    `json:"activity_id"`
+	TicketNo    string                  `json:"ticket_no"`
+	Description string                  `json:"description"`
+	Documents   []*multipart.FileHeader `json:"documents"`
+	CreatedBy   uint                    `json:"created_by,omitempty"` // ID of the creator
+	UpdatedBy   uint                    `json:"updated_by,omitempty"` // ID of the last updater
+	CreatedAt   time.Time               `json:"created_at"`           // Activity creation timestamp
+	UpdatedAt   time.Time               `json:"updated_at"`           // Activity update timestamp
 }
 
 type Document struct {
 	DocumentID   uint      `json:"document_id"`
 	DocumentName string    `json:"document_name"`
 	DocumentSize int64     `json:"document_size"`
-	DocumentBlob string    `json:"document_blob"`
+	DocumentPath string    `json:"document_path"`
 	CreatedBy    uint      `json:"created_by,omitempty"` // ID of the uploader
 	UpdatedBy    uint      `json:"updated_by,omitempty"` // ID of the last updater
 	CreatedAt    time.Time `json:"created_at"`           // Document creation timestamp

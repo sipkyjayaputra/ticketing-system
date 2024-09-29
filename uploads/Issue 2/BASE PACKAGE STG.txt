@@ -1,0 +1,31 @@
+BASE PACKAGE STG
+126 - Innova
+127 - Avanza
+128 - Ioniq
+129 - Alphard
+134 - Avanza or Better
+64 - 22 - NOW
+61 - 23 - AT
+62 - 24 - Rent
+
+  CarCodes = map[string]string{
+       "KIJANG":  "01"
+        "AVANZA":  "02",
+        "IONIQ":   "03",
+        "ALPHARD": "04"
+    }
+)
+
+131	1	GB Now - Innova
+132	1	GB Now - Avanza
+133	1	GB Now - Alphard
+134	1	GB Now - Ioniq
+135	1	GB Now - Avanza or Better
+136	1	GB Rent - Innova
+137	1	GB Rent - Avanza
+138	1	GB Rent - Alphard
+139	1	GB Rent - Ioniq
+140	1	GB AT - Innova
+141	1	GB AT - Avanza
+142	1	GB AT - Alphard
+143	1	GB AT - Ioniq

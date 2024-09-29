@@ -23,9 +23,9 @@ type Usecase interface {
 	// TICKET
 	GetTickets() (*utils.ResponseContainer, *utils.ErrorContainer)
 	AddTicket(dto.Ticket, uint) (*utils.ResponseContainer, *utils.ErrorContainer)
-	UpdateTicket(dto.Ticket, uint, uint) (*utils.ResponseContainer, *utils.ErrorContainer)
-	DeleteTicket(uint) (*utils.ResponseContainer, *utils.ErrorContainer)
-	GetTicketById(uint) (*utils.ResponseContainer, *utils.ErrorContainer)
+	UpdateTicket(dto.Ticket, uint, string) (*utils.ResponseContainer, *utils.ErrorContainer)
+	DeleteTicket(string) (*utils.ResponseContainer, *utils.ErrorContainer)
+	GetTicketById(string) (*utils.ResponseContainer, *utils.ErrorContainer)
 }
 
 type usecase struct {

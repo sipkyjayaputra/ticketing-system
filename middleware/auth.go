@@ -1,10 +1,11 @@
 package middleware
 
 import (
-	"github.com/sipkyjayaputra/ticketing-system/helpers"
-	"github.com/sipkyjayaputra/ticketing-system/utils"
 	"net/http"
 	"strings"
+
+	"github.com/sipkyjayaputra/ticketing-system/helpers"
+	"github.com/sipkyjayaputra/ticketing-system/utils"
 
 	"github.com/gin-gonic/gin"
 )
@@ -36,6 +37,7 @@ func Authorization() gin.HandlerFunc {
 
 		c.Set("username", claims.Username)
 		c.Set("role", claims.Role)
+		c.Set("user_id", claims.UserID)
 
 		c.Next()
 	}

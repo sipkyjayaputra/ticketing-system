@@ -1,14 +1,17 @@
 package delivery
 
 import (
+	"encoding/json"
 	"fmt"
 	"strconv"
 	"time"
 
 	"github.com/sipkyjayaputra/ticketing-system/model/dto"
 	"github.com/sipkyjayaputra/ticketing-system/utils"
+	"gitlab.sharingvision.com/almuntazhor/ai-dm-dashboard-service/constant"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 func (del *delivery) GetTickets(c *gin.Context) {
@@ -33,20 +36,38 @@ func (del *delivery) AddTicket(c *gin.Context) {
 	startTime := time.Now()
 	utils.LoggerProcess("info", fmt.Sprintf("Upper %s, [START]: Processing Request", funcName), del.logger)
 
-	request := dto.Ticket{}
-	errBind := c.ShouldBindJSON(&request)
-	utils.LoggerProcess("info", fmt.Sprintf("Request Body: %+v", request), del.logger)
-
-	if errBind != nil {
-		utils.LoggerProcess("error", fmt.Sprintf("Validation failed %s", errBind.Error()), del.logger)
-		resp := utils.BuildBadRequestResponse("bad request", errBind.Error())
+	form, errForm := c.MultipartForm()
+	if errForm != nil {
+		utils.LoggerProcess("error", fmt.Sprintf("%s", errForm.Error()), del.logger)
+		resp := utils.BuildBadRequestResponse("bad request", errForm.Error())
 		c.JSON(resp.Response.StatusCode, resp)
 		return
 	}
 
+	id := uuid.New()
+	formValue := form.Value
+	reporterID, _ := strconv.ParseInt(formValue["reporter_id"][0], 10, 64)
+	reportDate, _ := time.Parse(constant.DATE_TIME_LAYOUT, formValue["report_date"][0])
+	assignedID, _ := strconv.ParseInt(formValue["assigned_id"][0], 10, 64)
+	request := dto.Ticket{
+		TicketNo:   id.String(),
+		ReporterID: uint(reporterID),
+		TicketType: formValue["ticket_type"][0],
+		Subject:    formValue["subject"][0],
+		ReportDate: reportDate,
+		AssignedID: uint(assignedID),
+		Priority:   formValue["priority"][0],
+		Status:     formValue["status"][0],
+		Content:    json.RawMessage(formValue["content"][0]),
+	}
+
+	newActivity := dto.Activity{
+		Documents: form.File["documents"],
+	}
+	request.Activities = []dto.Activity{newActivity}
+
 	creator, _ := c.Get("user_id")
-	creatorID, _ := strconv.ParseInt(creator.(string), 10, 64)
-	res, err := del.uc.AddTicket(request, uint(creatorID))
+	res, err := del.uc.AddTicket(request, creator.(uint))
 
 	if err != nil {
 		utils.LoggerProcess("error", fmt.Sprintf("Process Failed %s", err.Response.Errors), del.logger)
@@ -63,23 +84,32 @@ func (del *delivery) UpdateTicket(c *gin.Context) {
 	startTime := time.Now()
 	utils.LoggerProcess("info", fmt.Sprintf("Upper %s, [START]: Processing Request", funcName), del.logger)
 
-	request := dto.Ticket{}
-	errBind := c.ShouldBindJSON(&request)
-	utils.LoggerProcess("info", fmt.Sprintf("Request Body: %+v", request), del.logger)
-
-	if errBind != nil {
-		utils.LoggerProcess("error", fmt.Sprintf("Validation failed %s", errBind.Error()), del.logger)
-		resp := utils.BuildBadRequestResponse("bad request", errBind.Error())
+	form, errForm := c.MultipartForm()
+	if errForm != nil {
+		utils.LoggerProcess("error", fmt.Sprintf("%s", errForm.Error()), del.logger)
+		resp := utils.BuildBadRequestResponse("bad request", errForm.Error())
 		c.JSON(resp.Response.StatusCode, resp)
 		return
 	}
 
-	updater, _ := c.Get("user_id")
-	updaterID, _ := strconv.ParseInt(updater.(string), 10, 64)
-	ticket := c.Param("ticket_no")
-	ticketNo, _ := strconv.ParseInt(ticket, 10, 64)
+	formValue := form.Value
+	reporterID, _ := strconv.ParseInt(formValue["reporter_id"][0], 10, 64)
+	reportDate, _ := time.Parse(constant.DATE_TIME_LAYOUT, formValue["report_date"][0])
+	assignedID, _ := strconv.ParseInt(formValue["assigned_id"][0], 10, 64)
+	request := dto.Ticket{
+		ReporterID: uint(reporterID),
+		TicketType: formValue["ticket_type"][0],
+		Subject:    formValue["subject"][0],
+		ReportDate: reportDate,
+		AssignedID: uint(assignedID),
+		Priority:   formValue["priority"][0],
+		Status:     formValue["status"][0],
+		Content:    json.RawMessage(formValue["content"][0]),
+	}
 
-	res, err := del.uc.UpdateTicket(request, uint(updaterID), uint(ticketNo))
+	updater, _ := c.Get("user_id")
+	ticketNo := c.Param("id")
+	res, err := del.uc.UpdateTicket(request, updater.(uint), ticketNo)
 
 	if err != nil {
 		utils.LoggerProcess("error", fmt.Sprintf("Process Failed %s", err.Response.Errors), del.logger)
@@ -96,10 +126,8 @@ func (del *delivery) DeleteTicket(c *gin.Context) {
 	startTime := time.Now()
 	utils.LoggerProcess("info", fmt.Sprintf("Upper %s, [START]: Processing Request", funcName), del.logger)
 
-	ticket := c.Param("ticket_no")
-	ticketNo, _ := strconv.ParseInt(ticket, 10, 64)
-
-	res, err := del.uc.DeleteTicket(uint(ticketNo))
+	ticketNo := c.Param("id")
+	res, err := del.uc.DeleteTicket(ticketNo)
 
 	if err != nil {
 		utils.LoggerProcess("error", fmt.Sprintf("Process Failed %s", err.Response.Errors), del.logger)
@@ -116,10 +144,8 @@ func (del *delivery) GetTicketById(c *gin.Context) {
 	startTime := time.Now()
 	utils.LoggerProcess("info", fmt.Sprintf("Upper %s, [START]: Processing Request", funcName), del.logger)
 
-	ticket := c.Param("ticket_no")
-	ticketNo, _ := strconv.ParseInt(ticket, 10, 64)
-
-	res, err := del.uc.GetTicketById(uint(ticketNo))
+	ticketNo := c.Param("id")
+	res, err := del.uc.GetTicketById(ticketNo)
 
 	if err != nil {
 		utils.LoggerProcess("error", fmt.Sprintf("Process Failed %s", err.Response.Errors), del.logger)

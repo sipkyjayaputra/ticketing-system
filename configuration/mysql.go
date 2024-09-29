@@ -40,7 +40,10 @@ func ConnectMySQL() (*gorm.DB, *sql.DB, error) {
 		log.Fatalln("Error connect to MySQL: ", err.Error())
 		return nil, nil, err
 	}
-	sqlConn.AutoMigrate(&entity.User{}, &entity.Ticket{}, &entity.Activity{}, &entity.Document{})
+	sqlConn.AutoMigrate(&entity.User{})     // Migrate User first
+	sqlConn.AutoMigrate(&entity.Document{}) // Migrate Ticket last
+	sqlConn.AutoMigrate(&entity.Activity{}) // Migrate Document second
+	sqlConn.AutoMigrate(&entity.Ticket{})   // Migrate Activity before Ticket
 
 	sqlDb, errDb := sqlConn.DB()
 	if errDb != nil {

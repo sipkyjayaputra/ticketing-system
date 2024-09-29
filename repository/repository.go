@@ -21,11 +21,11 @@ type Repository interface {
 	GetUserById(string) (*entity.User, error)
 
 	// TICKET
-	// GetTickets() ([]entity.Ticket, error)
+	GetTickets() ([]entity.Ticket, error)
 	AddTicket(dto.Ticket) error
-	// UpdateTicket(dto.Ticket) error
-	// DeleteTicket(uint) error
-	// GetTicketById(uint) (*entity.Ticket, error)
+	UpdateTicket(dto.Ticket) error
+	DeleteTicket(string) error
+	GetTicketById(string) (*entity.Ticket, error)
 }
 
 type repository struct {

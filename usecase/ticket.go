@@ -1,6 +1,7 @@
 package usecase
 
 import (
+	"errors"
 	"time"
 
 	"github.com/sipkyjayaputra/ticketing-system/model/dto"
@@ -8,35 +9,37 @@ import (
 )
 
 func (uc *usecase) GetTickets() (*utils.ResponseContainer, *utils.ErrorContainer) {
-	// tickets, err := uc.repo.GetTickets()
+	tickets, err := uc.repo.GetTickets()
 
-	// if err != nil {
-	// 	return nil, utils.BuildInternalErrorResponse("failed to get tickets", err.Error())
-	// }
+	if err != nil {
+		return nil, utils.BuildInternalErrorResponse("failed to get tickets", err.Error())
+	}
 
-	// Optionally, you can include any extra processing needed for activities and documents here.
+	for i := range tickets {
+		tickets[i].Assigned.Password = ""
+		tickets[i].Assigned.CreatedAt = nil
+		tickets[i].Assigned.UpdatedAt = nil
+		tickets[i].Assigned.CreatedBy = ""
+		tickets[i].Assigned.UpdatedBy = ""
+		tickets[i].Reporter.Password = ""
+		tickets[i].Reporter.CreatedAt = nil
+		tickets[i].Reporter.UpdatedAt = nil
+		tickets[i].Reporter.CreatedBy = ""
+		tickets[i].Reporter.UpdatedBy = ""
+	}
 
-	return utils.BuildSuccessResponse(nil), nil
+	return utils.BuildSuccessResponse(tickets), nil
 }
 
 func (uc *usecase) AddTicket(ticket dto.Ticket, creator uint) (*utils.ResponseContainer, *utils.ErrorContainer) {
 	ticket.CreatedBy = creator
 	ticket.UpdatedBy = creator
+	ticket.CreatedAt = time.Now()
+	ticket.UpdatedAt = time.Now()
 
-	// Handle activities and documents within the ticket if necessary
-	for i := range ticket.Activities {
-		ticket.Activities[i].CreatedAt = time.Now()
-		ticket.Activities[i].UpdatedAt = time.Now()
-		ticket.Activities[i].CreatedBy = creator
-		ticket.Activities[i].UpdatedBy = creator
-
-		// For each activity, set the creator for its documents
-		for j := range ticket.Activities[i].Files {
-			ticket.Activities[i].Files[j].CreatedAt = time.Now()
-			ticket.Activities[i].Files[j].UpdatedAt = time.Now()
-			ticket.Activities[i].Files[j].CreatedBy = creator
-			ticket.Activities[i].Files[j].UpdatedBy = creator
-		}
+	if len(ticket.Activities) < 1 {
+		err := errors.New("no activity")
+		return nil, utils.BuildInternalErrorResponse("failed to add ticket", err.Error())
 	}
 
 	if err := uc.repo.AddTicket(ticket); err != nil {
@@ -46,42 +49,43 @@ func (uc *usecase) AddTicket(ticket dto.Ticket, creator uint) (*utils.ResponseCo
 	return utils.BuildSuccessResponse(nil), nil
 }
 
-func (uc *usecase) UpdateTicket(ticket dto.Ticket, updater uint, ticketNo uint) (*utils.ResponseContainer, *utils.ErrorContainer) {
+func (uc *usecase) UpdateTicket(ticket dto.Ticket, updater uint, ticketNo string) (*utils.ResponseContainer, *utils.ErrorContainer) {
+	ticket.TicketNo = ticketNo
 	ticket.UpdatedBy = updater
+	ticket.UpdatedAt = time.Now()
 
-	// Handle activities and documents within the ticket if necessary
-	for i := range ticket.Activities {
-		ticket.Activities[i].UpdatedBy = updater
-
-		// For each activity, update the updater for its documents
-		for j := range ticket.Activities[i].Files {
-			ticket.Activities[i].Files[j].UpdatedBy = updater
-		}
+	if err := uc.repo.UpdateTicket(ticket); err != nil {
+		return nil, utils.BuildInternalErrorResponse("failed to update ticket", err.Error())
 	}
 
-	// if err := uc.repo.UpdateTicket(ticket, ticketNo); err != nil {
-	// 	return nil, utils.BuildInternalErrorResponse("failed to update ticket", err.Error())
-	// }
+	return utils.BuildSuccessResponse(nil), nil
+}
+
+func (uc *usecase) DeleteTicket(ticketNo string) (*utils.ResponseContainer, *utils.ErrorContainer) {
+	if err := uc.repo.DeleteTicket(ticketNo); err != nil {
+		return nil, utils.BuildInternalErrorResponse("failed to delete ticket", err.Error())
+	}
 
 	return utils.BuildSuccessResponse(nil), nil
 }
 
-func (uc *usecase) DeleteTicket(ticketNo uint) (*utils.ResponseContainer, *utils.ErrorContainer) {
-	// if err := uc.repo.DeleteTicket(ticketNo); err != nil {
-	// 	return nil, utils.BuildInternalErrorResponse("failed to delete ticket", err.Error())
-	// }
+func (uc *usecase) GetTicketById(ticketNo string) (*utils.ResponseContainer, *utils.ErrorContainer) {
+	ticket, err := uc.repo.GetTicketById(ticketNo)
 
-	return utils.BuildSuccessResponse(nil), nil
-}
+	if err != nil {
+		return nil, utils.BuildInternalErrorResponse("failed to get ticket", err.Error())
+	}
 
-func (uc *usecase) GetTicketById(ticketNo uint) (*utils.ResponseContainer, *utils.ErrorContainer) {
-	// ticket, err := uc.repo.GetTicketById(ticketNo)
+	ticket.Assigned.Password = ""
+	ticket.Assigned.CreatedAt = nil
+	ticket.Assigned.UpdatedAt = nil
+	ticket.Assigned.CreatedBy = ""
+	ticket.Assigned.UpdatedBy = ""
+	ticket.Reporter.Password = ""
+	ticket.Reporter.CreatedAt = nil
+	ticket.Reporter.UpdatedAt = nil
+	ticket.Reporter.CreatedBy = ""
+	ticket.Reporter.UpdatedBy = ""
 
-	// if err != nil {
-	// 	return nil, utils.BuildInternalErrorResponse("failed to get ticket", err.Error())
-	// }
-
-	// Optionally, include any extra processing needed for activities and documents here.
-
-	return utils.BuildSuccessResponse(nil), nil
+	return utils.BuildSuccessResponse(ticket), nil
 }

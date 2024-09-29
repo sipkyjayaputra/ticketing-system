@@ -8,13 +8,23 @@ import (
 )
 
 type Delivery interface {
+	// AUTH
 	SignIn(*gin.Context)
 	RefreshToken(*gin.Context)
+
+	// USERS
 	GetUsers(*gin.Context)
 	AddUser(*gin.Context)
 	UpdateUser(*gin.Context)
 	DeleteUser(*gin.Context)
 	GetUserById(*gin.Context)
+
+	// TICKET
+	GetTickets(*gin.Context)
+	AddTicket(*gin.Context)
+	UpdateTicket(*gin.Context)
+	DeleteTicket(*gin.Context)
+	GetTicketById(*gin.Context)
 }
 
 type delivery struct {

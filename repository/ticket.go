@@ -1,6 +1,9 @@
 package repository
 
 import (
+	"fmt"
+
+	"github.com/sipkyjayaputra/ticketing-system/helpers"
 	"github.com/sipkyjayaputra/ticketing-system/model/dto"
 	"github.com/sipkyjayaputra/ticketing-system/model/entity"
 	"gorm.io/gorm"
@@ -9,7 +12,7 @@ import (
 // GetTickets retrieves all tickets from the database
 func (repo *repository) GetTickets() ([]entity.Ticket, error) {
 	tickets := []entity.Ticket{}
-	if err := repo.db.Model(&entity.Ticket{}).Order("created_at DESC").Find(&tickets).Error; err != nil {
+	if err := repo.db.Model(&entity.Ticket{}).Preload("Activities").Preload("Assigned").Preload("Reporter").Order("created_at DESC").Find(&tickets).Error; err != nil {
 		return nil, err
 	}
 	return tickets, nil
@@ -25,7 +28,8 @@ func (repo *repository) AddTicket(ticket dto.Ticket) error {
 			TicketType: ticket.TicketType,
 			Subject:    ticket.Subject,
 			ReportDate: ticket.ReportDate,
-			AssignedID: ticket.Assigned.ID,
+			AssignedID: ticket.AssignedID,
+			ReporterID: ticket.ReporterID,
 			Priority:   ticket.Priority,
 			Status:     ticket.Status,
 			Content:    ticket.Content,
@@ -45,11 +49,11 @@ func (repo *repository) AddTicket(ticket dto.Ticket) error {
 			// Create the new activity entity
 			newActivity := entity.Activity{
 				TicketNo:    newTicket.TicketNo, // Associate the activity with the created ticket
-				Description: activity.Description,
-				CreatedAt:   activity.CreatedAt,
-				UpdatedAt:   activity.UpdatedAt,
-				CreatedBy:   activity.CreatedBy,
-				UpdatedBy:   activity.UpdatedBy,
+				Description: "Initial Activity",
+				CreatedBy:   ticket.CreatedBy,
+				UpdatedBy:   ticket.UpdatedBy,
+				CreatedAt:   ticket.CreatedAt,
+				UpdatedAt:   ticket.UpdatedAt,
 			}
 
 			// Insert the activity along with its documents
@@ -58,16 +62,22 @@ func (repo *repository) AddTicket(ticket dto.Ticket) error {
 			}
 
 			// Prepare the documents for the activity
-			for _, doc := range activity.Files {
+			for _, doc := range activity.Documents {
+				filePath := fmt.Sprintf("./uploads/%s/%s", ticket.TicketType, doc.Filename)
+
+				if err := helpers.SaveUploadedFile(doc, filePath); err != nil {
+					return err
+				}
+
 				newDoc := entity.Document{
-					ActivityID:   activity.ActivityID,
-					DocumentName: doc.DocumentName,
-					DocumentSize: doc.DocumentSize,
-					DocumentBlob: doc.DocumentBlob,
-					CreatedAt:    doc.CreatedAt,
-					UpdatedAt:    doc.UpdatedAt,
-					CreatedBy:    doc.CreatedBy,
-					UpdatedBy:    doc.UpdatedBy,
+					ActivityID:   newActivity.ActivityID,
+					DocumentName: doc.Filename,
+					DocumentSize: doc.Size,
+					DocumentPath: filePath,
+					CreatedBy:    ticket.CreatedBy,
+					UpdatedBy:    ticket.UpdatedBy,
+					CreatedAt:    ticket.CreatedAt,
+					UpdatedAt:    ticket.UpdatedAt,
 				}
 				// Insert the activity along with its documents
 				if err := tx.Create(&newDoc).Error; err != nil {
@@ -82,13 +92,13 @@ func (repo *repository) AddTicket(ticket dto.Ticket) error {
 }
 
 // UpdateTicket updates an existing ticket in the database
-func (repo *repository) UpdateTicket(ticket dto.Ticket, id string) error {
+func (repo *repository) UpdateTicket(ticket dto.Ticket) error {
 	updateTicket := &entity.Ticket{
 		TicketNo:   ticket.TicketNo,
 		TicketType: ticket.TicketType,
 		Subject:    ticket.Subject,
 		ReportDate: ticket.ReportDate,
-		AssignedID: ticket.Assigned.ID,
+		AssignedID: ticket.AssignedID,
 		Priority:   ticket.Priority,
 		Status:     ticket.Status,
 		Content:    ticket.Content,
@@ -98,7 +108,7 @@ func (repo *repository) UpdateTicket(ticket dto.Ticket, id string) error {
 		UpdatedAt:  ticket.UpdatedAt,
 	}
 
-	if err := repo.db.Model(&entity.Ticket{}).Where("ticket_id = ?", id).Updates(&updateTicket).Error; err != nil {
+	if err := repo.db.Model(&entity.Ticket{}).Where("ticket_no = ?", ticket.TicketNo).Updates(&updateTicket).Error; err != nil {
 		return err
 	}
 	return nil
@@ -106,7 +116,7 @@ func (repo *repository) UpdateTicket(ticket dto.Ticket, id string) error {
 
 // DeleteTicket deletes a ticket from the database
 func (repo *repository) DeleteTicket(id string) error {
-	if err := repo.db.Where("ticket_id = ?", id).Delete(&entity.Ticket{}).Error; err != nil {
+	if err := repo.db.Where("ticket_no = ?", id).Delete(&entity.Ticket{}).Error; err != nil {
 		return err
 	}
 	return nil
@@ -115,7 +125,7 @@ func (repo *repository) DeleteTicket(id string) error {
 // GetTicketById retrieves a specific ticket by ID from the database
 func (repo *repository) GetTicketById(id string) (*entity.Ticket, error) {
 	ticket := &entity.Ticket{}
-	if err := repo.db.Model(&entity.Ticket{}).Where("ticket_id = ?", id).First(&ticket).Error; err != nil {
+	if err := repo.db.Model(&entity.Ticket{}).Preload("Activities").Preload("Activities.Documents").Preload("Assigned").Preload("Reporter").Where("ticket_no = ?", id).First(&ticket).Error; err != nil {
 		return nil, err
 	}
 	return ticket, nil
