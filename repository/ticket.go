@@ -2,6 +2,8 @@ package repository
 
 import (
 	"fmt"
+	"strconv"
+	"strings"
 
 	"github.com/sipkyjayaputra/ticketing-system/helpers"
 	"github.com/sipkyjayaputra/ticketing-system/model/dto"
@@ -10,9 +12,52 @@ import (
 )
 
 // GetTickets retrieves all tickets from the database
-func (repo *repository) GetTickets() ([]entity.Ticket, error) {
+func (repo *repository) GetTickets(filter dto.TicketFilter) ([]entity.Ticket, error) {
 	tickets := []entity.Ticket{}
-	if err := repo.db.Model(&entity.Ticket{}).Preload("Activities").Preload("Assigned").Preload("Reporter").Order("created_at DESC").Find(&tickets).Error; err != nil {
+	query := repo.db.Model(&entity.Ticket{})
+
+	// Apply filters
+	if filter.TicketType != "" {
+		query = query.Where("UPPER(ticket_type) = ?", strings.ToUpper(filter.TicketType))
+	}
+
+	if filter.Priority != "" {
+		query = query.Where("UPPER(priority) = ?", strings.ToUpper(filter.Priority))
+	}
+
+	if filter.Status != "" {
+		query = query.Where("UPPER(status) = ?", strings.ToUpper(filter.Status))
+	}
+
+	if filter.ReportStartDate != "" && filter.ReportEndDate != "" {
+		query = query.Where("DATE(report_date) BETWEEN ? AND ?", filter.ReportStartDate, filter.ReportEndDate)
+	} else if filter.ReportStartDate != "" {
+		query = query.Where("DATE(report_date) >= ?", filter.ReportStartDate)
+	} else if filter.ReportEndDate != "" {
+		query = query.Where("DATE(report_date) <= ?", filter.ReportStartDate)
+	}
+
+	if filter.Terms != "" {
+		query = query.Where("subject LIKE ?", "%"+filter.Terms+"%")
+	}
+
+	// Handle pagination (limit and offset)
+	if filter.Limit != "" {
+		limit, err := strconv.ParseInt(filter.Limit, 10, 64)
+		if err == nil && limit > 0 {
+			query = query.Limit(int(limit))
+		}
+	}
+
+	if filter.Offset != "" {
+		offset, err := strconv.ParseInt(filter.Offset, 10, 64)
+		if err == nil && offset >= 0 {
+			query = query.Offset(int(offset))
+		}
+	}
+
+	// Preload relationships and order by creation date
+	if err := query.Preload("Activities").Preload("Assigned").Preload("Reporter").Order("created_at DESC").Find(&tickets).Error; err != nil {
 		return nil, err
 	}
 	return tickets, nil

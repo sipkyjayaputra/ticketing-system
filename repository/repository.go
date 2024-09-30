@@ -21,7 +21,7 @@ type Repository interface {
 	GetUserById(string) (*entity.User, error)
 
 	// TICKET
-	GetTickets() ([]entity.Ticket, error)
+	GetTickets(dto.TicketFilter) ([]entity.Ticket, error)
 	AddTicket(dto.Ticket) error
 	UpdateTicket(dto.Ticket) error
 	DeleteTicket(string) error

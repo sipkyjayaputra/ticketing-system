@@ -8,8 +8,8 @@ import (
 	"github.com/sipkyjayaputra/ticketing-system/utils"
 )
 
-func (uc *usecase) GetTickets() (*utils.ResponseContainer, *utils.ErrorContainer) {
-	tickets, err := uc.repo.GetTickets()
+func (uc *usecase) GetTickets(filter dto.TicketFilter) (*utils.ResponseContainer, *utils.ErrorContainer) {
+	tickets, err := uc.repo.GetTickets(filter)
 
 	if err != nil {
 		return nil, utils.BuildInternalErrorResponse("failed to get tickets", err.Error())

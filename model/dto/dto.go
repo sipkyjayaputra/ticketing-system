@@ -27,6 +27,17 @@ type RefreshToken struct {
 	RefreshToken string `json:"refresh_token" binding:"required"`
 }
 
+type TicketFilter struct {
+	TicketType      string `json:"ticket_type"`
+	Priority        string `json:"priority"`
+	Status          string `json:"status"`
+	ReportStartDate string `json:"report_start_date"`
+	ReportEndDate   string `json:"report_end_date"`
+	Terms           string `json:"terms"`
+	Limit           string `json:"limit"`
+	Offset          string `json:"offset"`
+}
+
 type Ticket struct {
 	TicketNo   string          `json:"ticket_no"`
 	ReporterID uint            `json:"reporter_id"`

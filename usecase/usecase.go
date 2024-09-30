@@ -21,7 +21,7 @@ type Usecase interface {
 	GetUserById(string) (*utils.ResponseContainer, *utils.ErrorContainer)
 
 	// TICKET
-	GetTickets() (*utils.ResponseContainer, *utils.ErrorContainer)
+	GetTickets(dto.TicketFilter) (*utils.ResponseContainer, *utils.ErrorContainer)
 	AddTicket(dto.Ticket, uint) (*utils.ResponseContainer, *utils.ErrorContainer)
 	UpdateTicket(dto.Ticket, uint, string) (*utils.ResponseContainer, *utils.ErrorContainer)
 	DeleteTicket(string) (*utils.ResponseContainer, *utils.ErrorContainer)

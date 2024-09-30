@@ -19,7 +19,18 @@ func (del *delivery) GetTickets(c *gin.Context) {
 	startTime := time.Now()
 	utils.LoggerProcess("info", fmt.Sprintf("Upper %s, [START]: Processing Request", funcName), del.logger)
 
-	res, err := del.uc.GetTickets()
+	ticketFilter := dto.TicketFilter{
+		TicketType:      c.Query("ticket_type"),
+		Priority:        c.Query("priority"),
+		Status:          c.Query("status"),
+		ReportStartDate: c.Query("report_start_date"),
+		ReportEndDate:   c.Query("report_end_date"),
+		Terms:           c.Query("terms"),
+		Limit:           c.Query("limit"),
+		Offset:          c.Query("offset"),
+	}
+
+	res, err := del.uc.GetTickets(ticketFilter)
 
 	if err != nil {
 		utils.LoggerProcess("error", fmt.Sprintf("Process Failed %s", err.Response.Errors), del.logger)
