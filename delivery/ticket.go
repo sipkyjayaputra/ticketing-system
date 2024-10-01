@@ -6,9 +6,9 @@ import (
 	"strconv"
 	"time"
 
+	cs "github.com/sipkyjayaputra/ticketing-system/constants"
 	"github.com/sipkyjayaputra/ticketing-system/model/dto"
 	"github.com/sipkyjayaputra/ticketing-system/utils"
-	"gitlab.sharingvision.com/almuntazhor/ai-dm-dashboard-service/constant"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -42,6 +42,23 @@ func (del *delivery) GetTickets(c *gin.Context) {
 	c.JSON(res.Response.StatusCode, res)
 }
 
+func (del *delivery) GetTicketSummary(c *gin.Context) {
+	funcName := "GetTicketSummary"
+	startTime := time.Now()
+	utils.LoggerProcess("info", fmt.Sprintf("Upper %s, [START]: Processing Request", funcName), del.logger)
+
+	res, err := del.uc.GetTicketSummary()
+
+	if err != nil {
+		utils.LoggerProcess("error", fmt.Sprintf("Process Failed %s", err.Response.Errors), del.logger)
+		c.JSON(err.Response.StatusCode, err)
+		return
+	}
+
+	utils.LoggerProcess("info", fmt.Sprintf("Lower %s, [END]: Elapsed Time %v", funcName, time.Since(startTime)), del.logger)
+	c.JSON(res.Response.StatusCode, res)
+}
+
 func (del *delivery) AddTicket(c *gin.Context) {
 	funcName := "AddTicket"
 	startTime := time.Now()
@@ -58,7 +75,7 @@ func (del *delivery) AddTicket(c *gin.Context) {
 	id := uuid.New()
 	formValue := form.Value
 	reporterID, _ := strconv.ParseInt(formValue["reporter_id"][0], 10, 64)
-	reportDate, _ := time.Parse(constant.DATE_TIME_LAYOUT, formValue["report_date"][0])
+	reportDate, _ := time.Parse(cs.DATE_TIME_LAYOUT, formValue["report_date"][0])
 	assignedID, _ := strconv.ParseInt(formValue["assigned_id"][0], 10, 64)
 	request := dto.Ticket{
 		TicketNo:   id.String(),
@@ -105,7 +122,7 @@ func (del *delivery) UpdateTicket(c *gin.Context) {
 
 	formValue := form.Value
 	reporterID, _ := strconv.ParseInt(formValue["reporter_id"][0], 10, 64)
-	reportDate, _ := time.Parse(constant.DATE_TIME_LAYOUT, formValue["report_date"][0])
+	reportDate, _ := time.Parse(cs.DATE_TIME_LAYOUT, formValue["report_date"][0])
 	assignedID, _ := strconv.ParseInt(formValue["assigned_id"][0], 10, 64)
 	request := dto.Ticket{
 		ReporterID: uint(reporterID),

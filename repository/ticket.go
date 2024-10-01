@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/sipkyjayaputra/ticketing-system/helpers"
 	"github.com/sipkyjayaputra/ticketing-system/model/dto"
@@ -61,6 +62,125 @@ func (repo *repository) GetTickets(filter dto.TicketFilter) ([]entity.Ticket, er
 		return nil, err
 	}
 	return tickets, nil
+}
+
+// GetTicketSummary retrieves all tickets from the database
+func (repo *repository) GetTicketSummary() (*entity.TicketSummary, error) {
+	ticketSummary := entity.TicketSummary{}
+	now := time.Now()
+	currentMonth := now.Month()
+	currentYear := now.Year()
+
+	// Adjust last month and year
+	lastMonth := currentMonth - 1
+	lastYear := currentYear
+	if lastMonth == 0 { // If the current month is January
+		lastMonth = 12 // December
+		lastYear--     // Move to last year
+	}
+
+	var (
+		newTicketCount, openTicketCount, pendingTicketCount, closedTicketCount                                     int
+		lastMonthNewTicketCount, lastMonthOpenTicketCount, lastMonthPendingTicketCount, lastMonthClosedTicketCount int
+	)
+
+	// Query for the current month
+	if err := repo.db.Model(&entity.Ticket{}).
+		Select("COUNT(*) AS new_ticket_count").
+		Where("MONTH(created_at) = ?", currentMonth).
+		Where("YEAR(created_at) = ?", currentYear).
+		Scan(&newTicketCount).Error; err != nil {
+		return nil, err
+	}
+
+	if err := repo.db.Model(&entity.Ticket{}).
+		Select("COUNT(*) AS open_ticket_count").
+		Where("UPPER(status) = ?", "OPEN").
+		Where("MONTH(created_at) = ?", currentMonth).
+		Where("YEAR(created_at) = ?", currentYear).
+		Scan(&openTicketCount).Error; err != nil {
+		return nil, err
+	}
+
+	if err := repo.db.Model(&entity.Ticket{}).
+		Select("COUNT(*) AS pending_ticket_count").
+		Where("UPPER(status) = ?", "PENDING").
+		Where("MONTH(created_at) = ?", currentMonth).
+		Where("YEAR(created_at) = ?", currentYear).
+		Scan(&pendingTicketCount).Error; err != nil {
+		return nil, err
+	}
+
+	if err := repo.db.Model(&entity.Ticket{}).
+		Select("COUNT(*) AS closed_ticket_count").
+		Where("UPPER(status) = ?", "CLOSED").
+		Where("MONTH(created_at) = ?", currentMonth).
+		Where("YEAR(created_at) = ?", currentYear).
+		Scan(&closedTicketCount).Error; err != nil {
+		return nil, err
+	}
+
+	// Query for the last month
+	if err := repo.db.Model(&entity.Ticket{}).
+		Select("COUNT(*) AS new_ticket_count").
+		Where("MONTH(created_at) = ?", lastMonth).
+		Where("YEAR(created_at) = ?", lastYear).
+		Scan(&lastMonthNewTicketCount).Error; err != nil {
+		return nil, err
+	}
+
+	if err := repo.db.Model(&entity.Ticket{}).
+		Select("COUNT(*) AS open_ticket_count").
+		Where("UPPER(status) = ?", "OPEN").
+		Where("MONTH(created_at) = ?", lastMonth).
+		Where("YEAR(created_at) = ?", lastYear).
+		Scan(&lastMonthOpenTicketCount).Error; err != nil {
+		return nil, err
+	}
+
+	if err := repo.db.Model(&entity.Ticket{}).
+		Select("COUNT(*) AS pending_ticket_count").
+		Where("UPPER(status) = ?", "PENDING").
+		Where("MONTH(created_at) = ?", lastMonth).
+		Where("YEAR(created_at) = ?", lastYear).
+		Scan(&lastMonthPendingTicketCount).Error; err != nil {
+		return nil, err
+	}
+
+	if err := repo.db.Model(&entity.Ticket{}).
+		Select("COUNT(*) AS closed_ticket_count").
+		Where("UPPER(status) = ?", "CLOSED").
+		Where("MONTH(created_at) = ?", lastMonth).
+		Where("YEAR(created_at) = ?", lastYear).
+		Scan(&lastMonthClosedTicketCount).Error; err != nil {
+		return nil, err
+	}
+
+	// Calculate notes
+	ticketSummary.NewTicketCount = newTicketCount
+	ticketSummary.NewTicketNote = getTicketNote(newTicketCount, lastMonthNewTicketCount)
+
+	ticketSummary.OpenTicketCount = openTicketCount
+	ticketSummary.OpenTicketNote = getTicketNote(openTicketCount, lastMonthOpenTicketCount)
+
+	ticketSummary.PendingTicketCount = pendingTicketCount
+	ticketSummary.PendingTicketNote = getTicketNote(pendingTicketCount, lastMonthPendingTicketCount)
+
+	ticketSummary.ClosedTicketCount = closedTicketCount
+	ticketSummary.ClosedTicketNote = getTicketNote(closedTicketCount, lastMonthClosedTicketCount)
+
+	return &ticketSummary, nil
+}
+
+// Helper function to generate the note
+func getTicketNote(currentCount, lastMonthCount int) string {
+	if currentCount > lastMonthCount {
+		return fmt.Sprintf("+%d than last month", currentCount-lastMonthCount)
+	} else if currentCount < lastMonthCount {
+		return fmt.Sprintf("-%d than last month", lastMonthCount-currentCount)
+	} else {
+		return "No change than last month"
+	}
 }
 
 // AddTicket adds a new ticket to the database

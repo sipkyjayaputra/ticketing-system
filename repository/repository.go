@@ -26,6 +26,7 @@ type Repository interface {
 	UpdateTicket(dto.Ticket) error
 	DeleteTicket(string) error
 	GetTicketById(string) (*entity.Ticket, error)
+	GetTicketSummary() (*entity.TicketSummary, error)
 
 	// ACTIVITY
 	GetActivitiesByTicketNo(ticketNo string) ([]entity.Activity, error)

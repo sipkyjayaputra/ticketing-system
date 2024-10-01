@@ -70,3 +70,14 @@ type Ticket struct {
 	Reporter   User       `gorm:"foreignKey:ReporterID" json:"reporter"` // Reporter user relationship
 	Activities []Activity `gorm:"foreignKey:TicketNo" json:"activities"` // Multiple activities related to the ticket
 }
+
+type TicketSummary struct {
+	NewTicketCount     int    `json:"new_ticket_count"`
+	NewTicketNote      string `json:"new_ticket_note"`
+	OpenTicketCount    int    `json:"open_ticket_count"`
+	OpenTicketNote     string `json:"open_ticket_note"`
+	PendingTicketCount int    `json:"pending_ticket_count"`
+	PendingTicketNote  string `json:"pending_ticket_note"`
+	ClosedTicketCount  int    `json:"closed_ticket_count"`
+	ClosedTicketNote   string `json:"closed_ticket_note"`
+}

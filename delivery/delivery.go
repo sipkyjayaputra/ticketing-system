@@ -25,6 +25,7 @@ type Delivery interface {
 	UpdateTicket(*gin.Context)
 	DeleteTicket(*gin.Context)
 	GetTicketById(*gin.Context)
+	GetTicketSummary(*gin.Context)
 
 	// ACTIVITY
 	GetActivitiesByTicketNo(*gin.Context)

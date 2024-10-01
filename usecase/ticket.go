@@ -31,6 +31,16 @@ func (uc *usecase) GetTickets(filter dto.TicketFilter) (*utils.ResponseContainer
 	return utils.BuildSuccessResponse(tickets), nil
 }
 
+func (uc *usecase) GetTicketSummary() (*utils.ResponseContainer, *utils.ErrorContainer) {
+	ticketSummary, err := uc.repo.GetTicketSummary()
+
+	if err != nil {
+		return nil, utils.BuildInternalErrorResponse("failed to get ticket summary", err.Error())
+	}
+
+	return utils.BuildSuccessResponse(ticketSummary), nil
+}
+
 func (uc *usecase) AddTicket(ticket dto.Ticket, creator uint) (*utils.ResponseContainer, *utils.ErrorContainer) {
 	ticket.CreatedBy = creator
 	ticket.UpdatedBy = creator

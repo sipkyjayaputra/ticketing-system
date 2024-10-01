@@ -44,6 +44,7 @@ func InitRouter(db *gorm.DB, logger *logrus.Logger, cache *redis.Client) *gin.En
 		protectedRoutes.PUT("tickets/:id", del.UpdateTicket)
 		protectedRoutes.GET("tickets/:id", del.GetTicketById)
 		protectedRoutes.DELETE("tickets/:id", middleware.AdminAccess(), del.DeleteTicket)
+		protectedRoutes.GET("tickets-summary", del.GetTicketSummary)
 
 		// ACTIVITY
 		// protectedRoutes.GET("activities", del.GetActivitiesByTicketNo) // Retrieve activities by ticket number
