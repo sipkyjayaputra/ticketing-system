@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"github.com/sipkyjayaputra/ticketing-system/model/dto"
+	"github.com/sipkyjayaputra/ticketing-system/model/entity"
 	"github.com/sipkyjayaputra/ticketing-system/repository"
 	"github.com/sipkyjayaputra/ticketing-system/utils"
 
@@ -34,6 +35,9 @@ type Usecase interface {
 	UpdateActivity(dto.Activity, uint, uint) (*utils.ResponseContainer, *utils.ErrorContainer)
 	DeleteActivity(uint) (*utils.ResponseContainer, *utils.ErrorContainer)
 	GetActivityById(uint) (*utils.ResponseContainer, *utils.ErrorContainer)
+
+	// DOCUMENT
+	GetDocumentById(uint) (*entity.Document, *utils.ErrorContainer)
 }
 
 type usecase struct {

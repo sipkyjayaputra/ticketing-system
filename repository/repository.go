@@ -34,6 +34,9 @@ type Repository interface {
 	UpdateActivity(activity dto.Activity) error
 	DeleteActivity(activityID uint) error
 	GetActivityById(activityID uint) (*entity.Activity, error)
+
+	// DOCUMENT
+	GetDocumentById(documentID uint) (*entity.Document, error)
 }
 
 type repository struct {

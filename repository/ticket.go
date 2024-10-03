@@ -228,16 +228,17 @@ func (repo *repository) AddTicket(ticket dto.Ticket) error {
 
 			// Prepare the documents for the activity
 			for _, doc := range activity.Documents {
-				filePath := fmt.Sprintf("./uploads/%s/%s", ticket.TicketType, doc.Filename)
+				filePath := fmt.Sprintf("./uploads/%s/%s", ticket.TicketType, doc.DocumentFile.Filename)
 
-				if err := helpers.SaveUploadedFile(doc, filePath); err != nil {
+				if err := helpers.SaveUploadedFile(doc.DocumentFile, filePath); err != nil {
 					return err
 				}
 
 				newDoc := entity.Document{
 					ActivityID:   newActivity.ActivityID,
-					DocumentName: doc.Filename,
-					DocumentSize: doc.Size,
+					DocumentName: doc.DocumentFile.Filename,
+					DocumentSize: doc.DocumentFile.Size,
+					DocumentType: doc.DocumentType,
 					DocumentPath: filePath,
 					CreatedBy:    ticket.CreatedBy,
 					UpdatedBy:    ticket.UpdatedBy,

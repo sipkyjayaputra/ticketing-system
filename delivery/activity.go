@@ -42,11 +42,21 @@ func (del *delivery) AddActivity(c *gin.Context) {
 		return
 	}
 
+	documents := []dto.Document{}
+	for key, val := range form.File {
+		for _, f := range val {
+			documents = append(documents, dto.Document{
+				DocumentType: key,
+				DocumentFile: f,
+			})
+		}
+	}
+
 	formValue := form.Value
 	newActivity := dto.Activity{
 		TicketNo:    formValue["ticket_no"][0],
 		Description: formValue["description"][0],
-		Documents:   form.File["documents"],
+		Documents:   documents,
 	}
 
 	creator, _ := c.Get("user_id")
@@ -75,13 +85,23 @@ func (del *delivery) UpdateActivity(c *gin.Context) {
 		return
 	}
 
+	documents := []dto.Document{}
+	for key, val := range form.File {
+		for _, f := range val {
+			documents = append(documents, dto.Document{
+				DocumentType: key,
+				DocumentFile: f,
+			})
+		}
+	}
+
 	formValue := form.Value
 	activityID, _ := strconv.ParseUint(c.Param("id"), 10, 64)
 	newActivity := dto.Activity{
 		TicketNo:    formValue["ticket_no"][0],
 		ActivityID:  uint(activityID),
 		Description: formValue["description"][0],
-		Documents:   form.File["documents"],
+		Documents:   documents,
 	}
 
 	updater, _ := c.Get("user_id")

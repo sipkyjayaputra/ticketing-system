@@ -56,23 +56,25 @@ type Ticket struct {
 }
 
 type Activity struct {
-	ActivityID  uint                    `json:"activity_id"`
-	TicketNo    string                  `json:"ticket_no"`
-	Description string                  `json:"description"`
-	Documents   []*multipart.FileHeader `json:"documents"`
-	CreatedBy   uint                    `json:"created_by,omitempty"` // ID of the creator
-	UpdatedBy   uint                    `json:"updated_by,omitempty"` // ID of the last updater
-	CreatedAt   time.Time               `json:"created_at"`           // Activity creation timestamp
-	UpdatedAt   time.Time               `json:"updated_at"`           // Activity update timestamp
+	ActivityID  uint       `json:"activity_id"`
+	TicketNo    string     `json:"ticket_no"`
+	Description string     `json:"description"`
+	Documents   []Document `json:"documents"`
+	CreatedBy   uint       `json:"created_by,omitempty"` // ID of the creator
+	UpdatedBy   uint       `json:"updated_by,omitempty"` // ID of the last updater
+	CreatedAt   time.Time  `json:"created_at"`           // Activity creation timestamp
+	UpdatedAt   time.Time  `json:"updated_at"`           // Activity update timestamp
 }
 
 type Document struct {
-	DocumentID   uint      `json:"document_id"`
-	DocumentName string    `json:"document_name"`
-	DocumentSize int64     `json:"document_size"`
-	DocumentPath string    `json:"document_path"`
-	CreatedBy    uint      `json:"created_by,omitempty"` // ID of the uploader
-	UpdatedBy    uint      `json:"updated_by,omitempty"` // ID of the last updater
-	CreatedAt    time.Time `json:"created_at"`           // Document creation timestamp
-	UpdatedAt    time.Time `json:"updated_at"`           // Document update timestamp
+	DocumentID   uint                  `json:"document_id"`
+	DocumentName string                `json:"document_name"`
+	DocumentSize int64                 `json:"document_size"`
+	DocumentPath string                `json:"document_path"`
+	DocumentType string                `json:"document_type"`
+	DocumentFile *multipart.FileHeader `json:"document_file"`
+	CreatedBy    uint                  `json:"created_by,omitempty"` // ID of the uploader
+	UpdatedBy    uint                  `json:"updated_by,omitempty"` // ID of the last updater
+	CreatedAt    time.Time             `json:"created_at"`           // Document creation timestamp
+	UpdatedAt    time.Time             `json:"updated_at"`           // Document update timestamp
 }

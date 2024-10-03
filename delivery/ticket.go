@@ -89,8 +89,18 @@ func (del *delivery) AddTicket(c *gin.Context) {
 		Content:    json.RawMessage(formValue["content"][0]),
 	}
 
+	documents := []dto.Document{}
+	for key, val := range form.File {
+		for _, f := range val {
+			documents = append(documents, dto.Document{
+				DocumentType: key,
+				DocumentFile: f,
+			})
+		}
+	}
+
 	newActivity := dto.Activity{
-		Documents: form.File["documents"],
+		Documents: documents,
 	}
 	request.Activities = []dto.Activity{newActivity}
 

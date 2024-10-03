@@ -39,18 +39,19 @@ func (repo *repository) AddActivity(activity dto.Activity) error {
 
 		// Loop through each document related to the activity
 		for _, doc := range activity.Documents {
-			filePath := fmt.Sprintf("./uploads/%s/%s", activity.TicketNo, doc.Filename)
+			filePath := fmt.Sprintf("./uploads/%s/%s", activity.TicketNo, doc.DocumentFile.Filename)
 
 			// Save the uploaded file
-			if err := helpers.SaveUploadedFile(doc, filePath); err != nil {
+			if err := helpers.SaveUploadedFile(doc.DocumentFile, filePath); err != nil {
 				return err
 			}
 
 			newDoc := entity.Document{
 				ActivityID:   newActivity.ActivityID, // Use the generated ActivityID
-				DocumentName: doc.Filename,
-				DocumentSize: doc.Size,
+				DocumentName: doc.DocumentFile.Filename,
+				DocumentSize: doc.DocumentFile.Size,
 				DocumentPath: filePath,
+				DocumentType: doc.DocumentType,
 				CreatedBy:    activity.CreatedBy,
 				UpdatedBy:    activity.UpdatedBy,
 				CreatedAt:    activity.CreatedAt,

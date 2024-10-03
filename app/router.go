@@ -57,6 +57,12 @@ func InitRouter(db *gorm.DB, logger *logrus.Logger, cache *redis.Client) *gin.En
 	router.POST("/auth/sign-in", del.SignIn)
 	router.POST("/auth/sign-up", del.AddUser)
 	router.POST("/auth/refresh-token", del.RefreshToken)
+
+	// FILES
+	router.GET("/file/serve", del.FileServe)
+	router.GET("/file/download", del.FileDownload)
+
+	// PING
 	router.GET("/ping", Ping)
 
 	return router

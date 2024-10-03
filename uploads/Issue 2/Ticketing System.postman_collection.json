@@ -1,0 +1,725 @@
+{
+	"info": {
+		"_postman_id": "e32be87b-a443-4ac7-92dd-05882d30de9c",
+		"name": "Ticketing System",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "10646940",
+		"_collection_link": "https://digiportobri.postman.co/workspace/Gandeng~7b0d56a3-b496-4b52-af67-c309d5b3ddda/collection/10646940-e32be87b-a443-4ac7-92dd-05882d30de9c?action=share&source=collection_link&creator=10646940"
+	},
+	"item": [
+		{
+			"name": "User",
+			"item": [
+				{
+					"name": "Get Users",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:8080/users",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"users"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get User By ID",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:8080/users/4",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"users",
+								"4"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Add User",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"username\": \"johndoe3\",\r\n    \"password\": \"secret123\",\r\n    \"email\": \"johndoe3@example.com\",\r\n    \"role\": \"admin\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:8080/users",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"users"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update User",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"username\": \"johndoe5\",\r\n    \"password\": \"secret123\",\r\n    \"email\": \"johndoe5@example.com\",\r\n    \"role\": \"admin\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:8080/users/1",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"users",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete User",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "localhost:8080/users/1",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"users",
+								"1"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Auth",
+			"item": [
+				{
+					"name": "Sign In",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Parse the response body\r",
+									"var jsonData = pm.response.json();\r",
+									"\r",
+									"// Store access_token in an environment variable\r",
+									"pm.environment.set(\"access_token\", jsonData.response.data.access_token);\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"username\": \"johndoe\",\r\n    \"password\": \"secret123\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:8080/auth/sign-in",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"auth",
+								"sign-in"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Sign Up",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"username\": \"johndoe\",\r\n    \"password\": \"secret123\",\r\n    \"email\": \"johndoe@example.com\",\r\n    \"role\": \"admin\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:8080/auth/sign-up",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"auth",
+								"sign-up"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Ticket",
+			"item": [
+				{
+					"name": "Add Ticket",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "reporter_id",
+									"value": "1",
+									"type": "text"
+								},
+								{
+									"key": "ticket_type",
+									"value": "Issue 2",
+									"type": "text"
+								},
+								{
+									"key": "subject",
+									"value": "System Down",
+									"type": "text"
+								},
+								{
+									"key": "report_date",
+									"value": "2024-09-28T10:00:00Z",
+									"type": "text"
+								},
+								{
+									"key": "assigned_id",
+									"value": "1",
+									"type": "text"
+								},
+								{
+									"key": "priority",
+									"value": "High",
+									"type": "text"
+								},
+								{
+									"key": "status",
+									"value": "Open",
+									"type": "text"
+								},
+								{
+									"key": "content",
+									"value": "{\"details\":\"System is not responding.\"}",
+									"type": "text"
+								},
+								{
+									"key": "documents",
+									"type": "file",
+									"src": "/C:/Users/sipky/Downloads/BASE PACKAGE STG.txt"
+								},
+								{
+									"key": "documents",
+									"type": "file",
+									"src": "/C:/Users/sipky/Downloads/High Level BB Reservation Architecture.drawio.png"
+								},
+								{
+									"key": "report_date",
+									"value": "2024-09-28T15:30:00Z",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "http://localhost:8080/tickets",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"tickets"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Ticket",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "reporter_id",
+									"value": "1",
+									"type": "text"
+								},
+								{
+									"key": "ticket_type",
+									"value": "Issue 2 Updated",
+									"type": "text"
+								},
+								{
+									"key": "subject",
+									"value": "System Down Updated",
+									"type": "text"
+								},
+								{
+									"key": "report_date",
+									"value": "2024-09-28T10:00:00Z",
+									"type": "text"
+								},
+								{
+									"key": "assigned_id",
+									"value": "1",
+									"type": "text"
+								},
+								{
+									"key": "priority",
+									"value": "High",
+									"type": "text"
+								},
+								{
+									"key": "status",
+									"value": "Open",
+									"type": "text"
+								},
+								{
+									"key": "content",
+									"value": "{\"details\":\"System is not responding.\", \"updated\": \"test\"}",
+									"type": "text"
+								},
+								{
+									"key": "documents",
+									"type": "file",
+									"src": "/C:/Users/sipky/Downloads/BASE PACKAGE STG.txt"
+								},
+								{
+									"key": "documents",
+									"type": "file",
+									"src": "/C:/Users/sipky/Downloads/High Level BB Reservation Architecture.drawio.png"
+								},
+								{
+									"key": "report_date",
+									"value": "2024-09-28T15:30:00Z",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "http://localhost:8080/tickets/463da83a-7260-40d6-9a72-be3fb12afeaa",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"tickets",
+								"463da83a-7260-40d6-9a72-be3fb12afeaa"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Tickets",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:8080/tickets",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"tickets"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Ticket By Id",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/tickets/cbc55115-38c1-4d57-96a5-10077b60db7e",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"tickets",
+								"cbc55115-38c1-4d57-96a5-10077b60db7e"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Ticket",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/tickets/463da83a-7260-40d6-9a72-be3fb12afeaa",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"tickets",
+								"463da83a-7260-40d6-9a72-be3fb12afeaa"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Activity",
+			"item": [
+				{
+					"name": "Add Activity",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "description",
+									"value": "Description Test",
+									"type": "text"
+								},
+								{
+									"key": "documents",
+									"type": "file",
+									"src": "/C:/Users/sipky/Downloads/port forward.txt"
+								},
+								{
+									"key": "ticket_no",
+									"value": "cbc55115-38c1-4d57-96a5-10077b60db7e",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/activities",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"activities"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Activity",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "description",
+									"value": "Description Test Updated",
+									"type": "text"
+								},
+								{
+									"key": "documents",
+									"type": "file",
+									"src": "/C:/Users/sipky/Downloads/port forward.txt"
+								},
+								{
+									"key": "ticket_no",
+									"value": "cbc55115-38c1-4d57-96a5-10077b60db7e",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/activities/10",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"activities",
+								"10"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Activity by ID",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/activities/10",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"activities",
+								"10"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Activity",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/activities/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"activities",
+								"1"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Ping",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8080/ping",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"ping"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

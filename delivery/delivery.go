@@ -33,6 +33,10 @@ type Delivery interface {
 	UpdateActivity(*gin.Context)
 	DeleteActivity(*gin.Context)
 	GetActivityById(*gin.Context)
+
+	// FILE
+	FileServe(*gin.Context)
+	FileDownload(*gin.Context)
 }
 
 type delivery struct {

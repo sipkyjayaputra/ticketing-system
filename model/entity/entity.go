@@ -31,10 +31,11 @@ type Document struct {
 	DocumentName string    `gorm:"column:document_name" json:"document_name"` // Name of the document
 	DocumentSize int64     `gorm:"column:document_size" json:"document_size"` // Size of the document in bytes
 	DocumentPath string    `gorm:"column:document_path" json:"document_path"` // Path for the document
-	CreatedAt    time.Time `gorm:"autoCreateTime" json:"created_at"`          // Document creation timestamp
-	UpdatedAt    time.Time `gorm:"autoUpdateTime" json:"updated_at"`          // Document update timestamp
-	CreatedBy    uint      `gorm:"column:created_by" json:"created_by"`       // User who uploaded the document
-	UpdatedBy    uint      `gorm:"column:updated_by" json:"updated_by"`       // User who last updated the document
+	DocumentType string    `gorm:"column:document_type" json:"document_type"`
+	CreatedAt    time.Time `gorm:"autoCreateTime" json:"created_at"`    // Document creation timestamp
+	UpdatedAt    time.Time `gorm:"autoUpdateTime" json:"updated_at"`    // Document update timestamp
+	CreatedBy    uint      `gorm:"column:created_by" json:"created_by"` // User who uploaded the document
+	UpdatedBy    uint      `gorm:"column:updated_by" json:"updated_by"` // User who last updated the document
 }
 
 type Activity struct {
