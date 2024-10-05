@@ -18,6 +18,8 @@ type Delivery interface {
 	UpdateUser(*gin.Context)
 	DeleteUser(*gin.Context)
 	GetUserById(*gin.Context)
+	UpdateUserPhoto(*gin.Context)
+	UpdateUserPassword(*gin.Context)
 
 	// TICKET
 	GetTickets(*gin.Context)

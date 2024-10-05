@@ -6,6 +6,17 @@ import (
 	"time"
 )
 
+type UpdateUserPhoto struct {
+	ID    uint                  `json:"id"`
+	Photo *multipart.FileHeader `json:"photo"`
+}
+
+type UpdateUserPassword struct {
+	ID             uint   `json:"id"`
+	NewPassword    string `json:"new_password"`
+	VerifyPassword string `json:"verify_password"`
+}
+
 type User struct {
 	ID        uint      `json:"id"`
 	Username  string    `json:"username" binding:"required"` // Username harus unik

@@ -11,18 +11,11 @@ type User struct {
 	Password  string     `gorm:"column:password" json:"password,omitempty"` // Password pengguna
 	Email     string     `gorm:"column:email;unique" json:"email"`          // Email pengguna, harus unik
 	Role      string     `gorm:"column:role" json:"role"`
+	Photo     string     `gorm:"column:photo;default:''" json:"photo"`
 	CreatedAt *time.Time `gorm:"autoCreateTime" json:"created_at,omitempty"`
 	UpdatedAt *time.Time `gorm:"autoUpdateTime" json:"updated_at,omitempty"`
 	CreatedBy string     `gorm:"column:created_by" json:"created_by,omitempty"`
 	UpdatedBy string     `gorm:"column:updated_by" json:"updated_by,omitempty"`
-}
-
-type UserData struct {
-	ID       uint   `json:"id"`
-	Username string `json:"username" binding:"required"` // Username harus unik
-	Password string `json:"password,omitempty"`          // Password pengguna
-	Email    string `json:"email" binding:"required"`    // Email pengguna, harus unik
-	Role     string `json:"role" binding:"required"`     // ID peran yang terkait
 }
 
 type Document struct {

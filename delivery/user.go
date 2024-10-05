@@ -1,10 +1,13 @@
 package delivery
 
 import (
+	"errors"
 	"fmt"
+	"strconv"
+	"time"
+
 	"github.com/sipkyjayaputra/ticketing-system/model/dto"
 	"github.com/sipkyjayaputra/ticketing-system/utils"
-	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -118,7 +121,96 @@ func (del *delivery) GetUserById(c *gin.Context) {
 	id := c.Param("id")
 
 	res, err := del.uc.GetUserById(id)
+	if err != nil {
+		utils.LoggerProcess("error", fmt.Sprintf("Process Failed %s", err.Response.Errors), del.logger)
+		c.JSON(err.Response.StatusCode, err)
+		return
+	}
 
+	utils.LoggerProcess("info", fmt.Sprintf("Lower %s, [END]: Elapsed Time %v", funcName, time.Since(startTime)), del.logger)
+	c.JSON(res.Response.StatusCode, res)
+}
+
+func (del *delivery) UpdateUserPhoto(c *gin.Context) {
+	funcName := "UpdateUserPhoto"
+	startTime := time.Now()
+	utils.LoggerProcess("info", fmt.Sprintf("Upper %s, [START]: Processing Request", funcName), del.logger)
+
+	form, errForm := c.MultipartForm()
+	if errForm != nil {
+		utils.LoggerProcess("error", fmt.Sprintf("%s", errForm.Error()), del.logger)
+		resp := utils.BuildBadRequestResponse("bad request", errForm.Error())
+		c.JSON(resp.Response.StatusCode, resp)
+		return
+	}
+
+	photo := form.File["photo"]
+	if len(photo) == 0 {
+		errPhoto := errors.New("invalid photo")
+		utils.LoggerProcess("error", fmt.Sprintf("%s", errPhoto.Error()), del.logger)
+		resp := utils.BuildBadRequestResponse("bad request", errPhoto.Error())
+		c.JSON(resp.Response.StatusCode, resp)
+		return
+	}
+
+	id := c.Param("id")
+	userID, errUserId := strconv.ParseInt(id, 10, 64)
+	if errUserId != nil {
+		utils.LoggerProcess("error", fmt.Sprintf("%s", errUserId.Error()), del.logger)
+		resp := utils.BuildBadRequestResponse("bad request", errUserId.Error())
+		c.JSON(resp.Response.StatusCode, resp)
+		return
+	}
+
+	userPhoto := dto.UpdateUserPhoto{
+		ID:    uint(userID),
+		Photo: photo[0],
+	}
+	res, err := del.uc.UpdateUserPhoto(userPhoto)
+	if err != nil {
+		utils.LoggerProcess("error", fmt.Sprintf("Process Failed %s", err.Response.Errors), del.logger)
+		c.JSON(err.Response.StatusCode, err)
+		return
+	}
+
+	utils.LoggerProcess("info", fmt.Sprintf("Lower %s, [END]: Elapsed Time %v", funcName, time.Since(startTime)), del.logger)
+	c.JSON(res.Response.StatusCode, res)
+}
+
+func (del *delivery) UpdateUserPassword(c *gin.Context) {
+	funcName := "UpdateUserPassword"
+	startTime := time.Now()
+	utils.LoggerProcess("info", fmt.Sprintf("Upper %s, [START]: Processing Request", funcName), del.logger)
+
+	request := dto.UpdateUserPassword{}
+	errBind := c.ShouldBindJSON(&request)
+	utils.LoggerProcess("info", fmt.Sprintf("Request Body: %+v", request), del.logger)
+	if errBind != nil {
+		utils.LoggerProcess("error", fmt.Sprintf("Validation failed %s", errBind.Error()), del.logger)
+		resp := utils.BuildBadRequestResponse("bad request", errBind.Error())
+		c.JSON(resp.Response.StatusCode, resp)
+		return
+	}
+
+	id := c.Param("id")
+	userID, errUserId := strconv.ParseInt(id, 10, 64)
+	if errUserId != nil {
+		utils.LoggerProcess("error", fmt.Sprintf("%s", errUserId.Error()), del.logger)
+		resp := utils.BuildBadRequestResponse("bad request", errUserId.Error())
+		c.JSON(resp.Response.StatusCode, resp)
+		return
+	}
+
+	if request.NewPassword != request.VerifyPassword {
+		errPhoto := errors.New("password did not match")
+		utils.LoggerProcess("error", fmt.Sprintf("%s", errPhoto.Error()), del.logger)
+		resp := utils.BuildBadRequestResponse("bad request", errPhoto.Error())
+		c.JSON(resp.Response.StatusCode, resp)
+		return
+	}
+
+	request.ID = uint(userID)
+	res, err := del.uc.UpdateUserPassword(request)
 	if err != nil {
 		utils.LoggerProcess("error", fmt.Sprintf("Process Failed %s", err.Response.Errors), del.logger)
 		c.JSON(err.Response.StatusCode, err)

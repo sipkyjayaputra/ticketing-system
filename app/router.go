@@ -37,6 +37,8 @@ func InitRouter(db *gorm.DB, logger *logrus.Logger, cache *redis.Client) *gin.En
 		protectedRoutes.PUT("users/:id", del.UpdateUser)
 		protectedRoutes.GET("users/:id", del.GetUserById)
 		protectedRoutes.DELETE("users/:id", middleware.AdminAccess(), del.DeleteUser)
+		protectedRoutes.PUT("users/:id/update-password", del.UpdateUserPassword)
+		protectedRoutes.PUT("users/:id/update-photo", del.UpdateUserPhoto)
 
 		// TICKET
 		protectedRoutes.GET("tickets", middleware.AdminAccess(), del.GetTickets)
@@ -52,15 +54,15 @@ func InitRouter(db *gorm.DB, logger *logrus.Logger, cache *redis.Client) *gin.En
 		protectedRoutes.PUT("activities/:id", del.UpdateActivity)    // Update an existing activity
 		protectedRoutes.GET("activities/:id", del.GetActivityById)   // Get a specific activity by ID
 		protectedRoutes.DELETE("activities/:id", del.DeleteActivity) // Delete an activity
+
+		// FILES
+		router.GET("/file/serve", del.FileServe)
+		router.GET("/file/download", del.FileDownload)
 	}
 	// AUTH
 	router.POST("/auth/sign-in", del.SignIn)
 	router.POST("/auth/sign-up", del.AddUser)
 	router.POST("/auth/refresh-token", del.RefreshToken)
-
-	// FILES
-	router.GET("/file/serve", del.FileServe)
-	router.GET("/file/download", del.FileDownload)
 
 	// PING
 	router.GET("/ping", Ping)

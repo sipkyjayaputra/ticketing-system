@@ -20,6 +20,8 @@ type Usecase interface {
 	UpdateUser(dto.User, string, string) (*utils.ResponseContainer, *utils.ErrorContainer)
 	DeleteUser(string) (*utils.ResponseContainer, *utils.ErrorContainer)
 	GetUserById(string) (*utils.ResponseContainer, *utils.ErrorContainer)
+	UpdateUserPhoto(dto.UpdateUserPhoto) (*utils.ResponseContainer, *utils.ErrorContainer)
+	UpdateUserPassword(dto.UpdateUserPassword) (*utils.ResponseContainer, *utils.ErrorContainer)
 
 	// TICKET
 	GetTickets(dto.TicketFilter) (*utils.ResponseContainer, *utils.ErrorContainer)

@@ -59,3 +59,28 @@ func (uc *usecase) GetUserById(id string) (*utils.ResponseContainer, *utils.Erro
 
 	return utils.BuildSuccessResponse(user), nil
 }
+
+func (uc *usecase) UpdateUserPhoto(request dto.UpdateUserPhoto) (*utils.ResponseContainer, *utils.ErrorContainer) {
+	err := uc.repo.UpdateUserPhoto(request)
+
+	if err != nil {
+		return nil, utils.BuildInternalErrorResponse("failed to get user", err.Error())
+	}
+
+	return utils.BuildSuccessResponse(nil), nil
+}
+
+func (uc *usecase) UpdateUserPassword(request dto.UpdateUserPassword) (*utils.ResponseContainer, *utils.ErrorContainer) {
+	hashedPassword, errHashedPassword := bcrypt.GenerateFromPassword([]byte(request.NewPassword), bcrypt.DefaultCost)
+	if errHashedPassword != nil {
+		return nil, utils.BuildBadRequestResponse("failed to generate password", errHashedPassword.Error())
+	}
+
+	request.NewPassword = string(hashedPassword)
+	err := uc.repo.UpdateUserPassword(request)
+	if err != nil {
+		return nil, utils.BuildInternalErrorResponse("failed to get user", err.Error())
+	}
+
+	return utils.BuildSuccessResponse(nil), nil
+}
