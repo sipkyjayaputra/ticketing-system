@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/sipkyjayaputra/ticketing-system/model/dto"
@@ -162,6 +163,16 @@ func (del *delivery) UpdateUserPhoto(c *gin.Context) {
 		return
 	}
 
+	claimId, _ := c.Get("user_id")
+	claimRole, _ := c.Get("role")
+	if !strings.Contains(claimRole.(string), "admin") && claimId.(string) != id {
+		err := errors.New("unauthorized access")
+		utils.LoggerProcess("error", fmt.Sprintf("%s", err.Error()), del.logger)
+		resp := utils.BuildForbiddenAccessResponse(err.Error())
+		c.JSON(resp.Response.StatusCode, resp)
+		return
+	}
+
 	userPhoto := dto.UpdateUserPhoto{
 		ID:    uint(userID),
 		Photo: photo[0],
@@ -197,6 +208,16 @@ func (del *delivery) UpdateUserPassword(c *gin.Context) {
 	if errUserId != nil {
 		utils.LoggerProcess("error", fmt.Sprintf("%s", errUserId.Error()), del.logger)
 		resp := utils.BuildBadRequestResponse("bad request", errUserId.Error())
+		c.JSON(resp.Response.StatusCode, resp)
+		return
+	}
+
+	claimId, _ := c.Get("user_id")
+	claimRole, _ := c.Get("role")
+	if !strings.Contains(claimRole.(string), "admin") && claimId.(string) != id {
+		err := errors.New("unauthorized access")
+		utils.LoggerProcess("error", fmt.Sprintf("%s", err.Error()), del.logger)
+		resp := utils.BuildForbiddenAccessResponse(err.Error())
 		c.JSON(resp.Response.StatusCode, resp)
 		return
 	}
