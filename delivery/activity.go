@@ -16,8 +16,8 @@ func (del *delivery) GetActivitiesByTicketNo(c *gin.Context) {
 	startTime := time.Now()
 	utils.LoggerProcess("info", fmt.Sprintf("Upper %s, [START]: Processing Request", funcName), del.logger)
 
-	ticketNo := c.Param("ticket_no")
-	res, err := del.uc.GetActivitiesByTicketNo(ticketNo)
+	ticketID := c.Param("ticket_id")
+	res, err := del.uc.GetActivitiesByTicketNo(ticketID)
 
 	if err != nil {
 		utils.LoggerProcess("error", fmt.Sprintf("Process Failed %s", err.Response.Errors), del.logger)
@@ -36,7 +36,7 @@ func (del *delivery) AddActivity(c *gin.Context) {
 
 	form, errForm := c.MultipartForm()
 	if errForm != nil {
-		utils.LoggerProcess("error", fmt.Sprintf("%s", errForm.Error()), del.logger)
+		utils.LoggerProcess("error",  errForm.Error(), del.logger)
 		resp := utils.BuildBadRequestResponse("bad request", errForm.Error())
 		c.JSON(resp.Response.StatusCode, resp)
 		return
@@ -53,8 +53,10 @@ func (del *delivery) AddActivity(c *gin.Context) {
 	}
 
 	formValue := form.Value
+	
+	ticketID, _ := strconv.ParseUint(formValue["ticket_id"][0], 10, 64)
 	newActivity := dto.Activity{
-		TicketNo:    formValue["ticket_no"][0],
+		TicketID:   uint(ticketID),
 		Description: formValue["description"][0],
 		Documents:   documents,
 	}
@@ -79,7 +81,7 @@ func (del *delivery) UpdateActivity(c *gin.Context) {
 
 	form, errForm := c.MultipartForm()
 	if errForm != nil {
-		utils.LoggerProcess("error", fmt.Sprintf("%s", errForm.Error()), del.logger)
+		utils.LoggerProcess("error", errForm.Error(), del.logger)
 		resp := utils.BuildBadRequestResponse("bad request", errForm.Error())
 		c.JSON(resp.Response.StatusCode, resp)
 		return
@@ -97,8 +99,9 @@ func (del *delivery) UpdateActivity(c *gin.Context) {
 
 	formValue := form.Value
 	activityID, _ := strconv.ParseUint(c.Param("id"), 10, 64)
+	ticketID, _ := strconv.ParseUint(formValue["ticket_id"][0], 10, 64)
 	newActivity := dto.Activity{
-		TicketNo:    formValue["ticket_no"][0],
+		TicketID:    uint(ticketID),
 		ActivityID:  uint(activityID),
 		Description: formValue["description"][0],
 		Documents:   documents,

@@ -10,9 +10,9 @@ import (
 )
 
 // GetActivitiesByTicketNo retrieves all activities for a specific ticket from the database
-func (repo *repository) GetActivitiesByTicketNo(ticketNo string) ([]entity.Activity, error) {
+func (repo *repository) GetActivitiesByTicketNo(id string) ([]entity.Activity, error) {
 	activities := []entity.Activity{}
-	if err := repo.db.Model(&entity.Activity{}).Preload("Documents").Where("ticket_no = ?", ticketNo).Order("created_at DESC").Find(&activities).Error; err != nil {
+	if err := repo.db.Model(&entity.Activity{}).Preload("Documents").Where("id = ?", id).Order("created_at DESC").Find(&activities).Error; err != nil {
 		return nil, err
 	}
 	return activities, nil
@@ -24,7 +24,7 @@ func (repo *repository) AddActivity(activity dto.Activity) error {
 	return repo.db.Transaction(func(tx *gorm.DB) error {
 		// Create the new activity entity
 		newActivity := &entity.Activity{
-			TicketNo:    activity.TicketNo, // Associate the activity with the provided ticketNo
+			TicketID:    activity.TicketID, // Associate the activity with the provided ticketNo
 			Description: activity.Description,
 			CreatedBy:   activity.CreatedBy,
 			UpdatedBy:   activity.UpdatedBy,
@@ -39,7 +39,7 @@ func (repo *repository) AddActivity(activity dto.Activity) error {
 
 		// Loop through each document related to the activity
 		for _, doc := range activity.Documents {
-			filePath := fmt.Sprintf("./uploads/%s/%s", activity.TicketNo, doc.DocumentFile.Filename)
+			filePath := fmt.Sprintf("./uploads/%d/%s", activity.TicketID, doc.DocumentFile.Filename)
 
 			// Save the uploaded file
 			if err := helpers.SaveUploadedFile(doc.DocumentFile, filePath); err != nil {

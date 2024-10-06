@@ -30,7 +30,7 @@ type User struct {
 }
 
 type SignIn struct {
-	Username string `json:"username" binding:"required"` // Username harus unik
+	Email string `json:"email" binding:"required"` // Username harus unik
 	Password string `json:"password" binding:"required"` // Password pengguna
 }
 
@@ -50,6 +50,7 @@ type TicketFilter struct {
 }
 
 type Ticket struct {
+	TicketID   uint            `json:"ticket_id"`
 	TicketNo   string          `json:"ticket_no"`
 	ReporterID uint            `json:"reporter_id"`
 	TicketType string          `json:"ticket_type"`
@@ -68,7 +69,7 @@ type Ticket struct {
 
 type Activity struct {
 	ActivityID  uint       `json:"activity_id"`
-	TicketNo    string     `json:"ticket_no"`
+	TicketID    uint       `json:"ticket_id"` 			// Ticket
 	Description string     `json:"description"`
 	Documents   []Document `json:"documents"`
 	CreatedBy   uint       `json:"created_by,omitempty"` // ID of the creator

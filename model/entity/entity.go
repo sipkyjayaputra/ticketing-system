@@ -20,6 +20,7 @@ type User struct {
 
 type Document struct {
 	DocumentID   uint      `gorm:"primaryKey;autoIncrement" json:"document_id"`
+	DocumentNo   string      `gorm:"column:document_no" json:"document_no"`
 	ActivityID   uint      `gorm:"column:activity_id" json:"activity_id"`     // Foreign key, references Activity's ActivityID
 	DocumentName string    `gorm:"column:document_name" json:"document_name"` // Name of the document
 	DocumentSize int64     `gorm:"column:document_size" json:"document_size"` // Size of the document in bytes
@@ -33,7 +34,7 @@ type Document struct {
 
 type Activity struct {
 	ActivityID  uint      `gorm:"primaryKey;autoIncrement" json:"activity_id"`
-	TicketNo    string    `gorm:"column:ticket_no" json:"ticket_no"`     // Foreign key, references Ticket's TicketNo
+	TicketID    uint      `gorm:"column:ticket_id" json:"ticket_id"`     // Foreign key, references Ticket's TicketNo
 	Description string    `gorm:"column:description" json:"description"` // Description of the activity
 	CreatedAt   time.Time `gorm:"autoCreateTime" json:"created_at"`      // Activity creation timestamp
 	UpdatedAt   time.Time `gorm:"autoUpdateTime" json:"updated_at"`      // Activity update timestamp
@@ -44,8 +45,10 @@ type Activity struct {
 	Documents []Document `gorm:"foreignKey:ActivityID" json:"documents"` // Multiple documents related to the activity
 }
 
+
 type Ticket struct {
-	TicketNo   string          `gorm:"primaryKey;column:ticket_no" json:"ticket_no"` // Unique ticket number
+	TicketID   uint      	   `gorm:"primaryKey;autoIncrement" json:"ticket_id"`      // Serial ID for the ticket
+	TicketNo   string          `gorm:"column:ticket_no" json:"ticket_no"` // Unique ticket number
 	ReporterID uint            `gorm:"column:reporter_id" json:"reporter_id"`        // ID of the user who reported the ticket
 	TicketType string          `gorm:"column:ticket_type" json:"ticket_type"`        // Type of ticket
 	Subject    string          `gorm:"column:subject" json:"subject"`                // Subject of the ticket
@@ -62,16 +65,20 @@ type Ticket struct {
 	// Relationships
 	Assigned   User       `gorm:"foreignKey:AssignedID" json:"assigned"` // Assigned user relationship
 	Reporter   User       `gorm:"foreignKey:ReporterID" json:"reporter"` // Reporter user relationship
-	Activities []Activity `gorm:"foreignKey:TicketNo" json:"activities"` // Multiple activities related to the ticket
+	Activities []Activity `gorm:"foreignKey:TicketID" json:"activities"` // Multiple activities related to the ticket
 }
 
 type TicketSummary struct {
 	NewTicketCount     int    `json:"new_ticket_count"`
-	NewTicketNote      string `json:"new_ticket_note"`
+	NewTicketCountLastMonth int `json:"new_ticket_count_last_month"`
+	NewTicketNote string `json:"new_ticket_note"`
 	OpenTicketCount    int    `json:"open_ticket_count"`
+	OpenTicketCountLastMonth     int `json:"open_ticket_count_last_month"`
 	OpenTicketNote     string `json:"open_ticket_note"`
 	PendingTicketCount int    `json:"pending_ticket_count"`
+	PendingTicketCountLastMonth  int `json:"pending_ticke_count_last_month"`
 	PendingTicketNote  string `json:"pending_ticket_note"`
 	ClosedTicketCount  int    `json:"closed_ticket_count"`
+	ClosedTicketCountLastMonth   int `json:"closed_ticket_count_last_month"`
 	ClosedTicketNote   string `json:"closed_ticket_note"`
 }

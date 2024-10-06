@@ -56,8 +56,8 @@ func InitRouter(db *gorm.DB, logger *logrus.Logger, cache *redis.Client) *gin.En
 		protectedRoutes.DELETE("activities/:id", del.DeleteActivity) // Delete an activity
 
 		// FILES
-		router.GET("/file/serve", del.FileServe)
-		router.GET("/file/download", del.FileDownload)
+		router.GET("/file/serve/:id", del.FileServe)
+		router.GET("/file/download/:id", del.FileDownload)
 	}
 	// AUTH
 	router.POST("/auth/sign-in", del.SignIn)
