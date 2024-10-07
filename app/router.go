@@ -32,7 +32,7 @@ func InitRouter(db *gorm.DB, logger *logrus.Logger, cache *redis.Client) *gin.En
 	protectedRoutes.Use(middleware.Authorization())
 	{
 		// USERS
-		protectedRoutes.GET("users", middleware.AdminAccess(), del.GetUsers)
+		protectedRoutes.GET("users", del.GetUsers)
 		protectedRoutes.POST("users", middleware.AdminAccess(), del.AddUser)
 		protectedRoutes.PUT("users/:id", del.UpdateUser)
 		protectedRoutes.GET("users/:id", del.GetUserById)
@@ -41,11 +41,12 @@ func InitRouter(db *gorm.DB, logger *logrus.Logger, cache *redis.Client) *gin.En
 		protectedRoutes.PUT("users/:id/update-photo", del.UpdateUserPhoto)
 
 		// TICKET
-		protectedRoutes.GET("tickets", middleware.AdminAccess(), del.GetTickets)
-		protectedRoutes.POST("tickets", middleware.AdminAccess(), del.AddTicket)
-		protectedRoutes.PUT("tickets/:id", del.UpdateTicket)
+		protectedRoutes.GET("tickets",  del.GetTickets)
+		protectedRoutes.POST("tickets", del.AddTicket)
+		protectedRoutes.PUT("tickets/:id", middleware.AdminAccess(), del.UpdateTicket)
 		protectedRoutes.GET("tickets/:id", del.GetTicketById)
 		protectedRoutes.DELETE("tickets/:id", middleware.AdminAccess(), del.DeleteTicket)
+		protectedRoutes.PUT("tickets/close", middleware.AdminAccess(), del.CloseTicket)
 		protectedRoutes.GET("tickets-summary", del.GetTicketSummary)
 
 		// ACTIVITY

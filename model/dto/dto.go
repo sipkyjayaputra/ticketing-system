@@ -10,6 +10,10 @@ type UpdateUserPhoto struct {
 	ID    uint                  `json:"id"`
 	Photo *multipart.FileHeader `json:"photo"`
 }
+type CloseTicket struct {
+	TicketID    uint   `json:"ticket_id"`
+	Status 		string `json:"status"`
+}
 
 type UpdateUserPassword struct {
 	ID             uint   `json:"id"`
@@ -23,6 +27,9 @@ type User struct {
 	Password  string    `json:"password,omitempty"`          // Password pengguna
 	Email     string    `json:"email" binding:"required"`    // Email pengguna, harus unik
 	Role      string    `json:"role" binding:"required"`     // ID peran yang terkait
+	Phone     string    `json:"phone"`     // ID peran yang terkait
+	Workpalce string    `json:"workplace" `     // ID peran yang terkait
+	Team      string    `json:"team"`     // ID peran yang terkait
 	CreatedBy string    `json:"created_by,omitempty"`
 	UpdatedBy string    `json:"updated_by,omitempty"`
 	CreatedAt time.Time `json:"created_at"`
@@ -47,6 +54,7 @@ type TicketFilter struct {
 	Terms           string `json:"terms"`
 	Limit           string `json:"limit"`
 	Offset          string `json:"offset"`
+	ReporterID 		string `json:"reporter_id"`
 }
 
 type Ticket struct {

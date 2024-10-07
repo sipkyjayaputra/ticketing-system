@@ -37,11 +37,15 @@ func (repo *repository) GetTickets(filter dto.TicketFilter) ([]entity.Ticket, er
 	} else if filter.ReportStartDate != "" {
 		query = query.Where("DATE(report_date) >= ?", filter.ReportStartDate)
 	} else if filter.ReportEndDate != "" {
-		query = query.Where("DATE(report_date) <= ?", filter.ReportStartDate)
+		query = query.Where("DATE(report_date) <= ?", filter.ReportEndDate)
 	}
 
 	if filter.Terms != "" {
 		query = query.Where("subject LIKE ?", "%"+filter.Terms+"%")
+	}
+
+	if filter.ReporterID != "" {
+		query = query.Where("reporter_id = ?", filter.ReporterID)
 	}
 
 	// Handle pagination (limit and offset)
@@ -59,10 +63,24 @@ func (repo *repository) GetTickets(filter dto.TicketFilter) ([]entity.Ticket, er
 		}
 	}
 
-	// Preload relationships and order by creation date
-	if err := query.Preload("Activities.Documents").Preload("Assigned").Preload("Reporter").Order("created_at DESC").Find(&tickets).Error; err != nil {
+	// Preload relationships, excluding `created_at` and `updated_at`
+	userFields := "id, username" // Add other fields as needed
+	if err := query.
+		Preload("Activities.Documents").
+		Preload("Updater", func(db *gorm.DB) *gorm.DB {
+			return db.Select(userFields)
+		}).
+		Preload("Assigned", func(db *gorm.DB) *gorm.DB {
+			return db.Select(userFields)
+		}).
+		Preload("Reporter", func(db *gorm.DB) *gorm.DB {
+			return db.Select(userFields)
+		}).
+		Order("created_at DESC").
+		Find(&tickets).Error; err != nil {
 		return nil, err
 	}
+
 	return tickets, nil
 }
 
@@ -188,6 +206,7 @@ func getTicketNote(currentCount, lastMonthCount int) string {
 		return ""
 	}
 }
+
 func getTicketCountLastMonth(currentCount, lastMonthCount int) int {
 	if currentCount > lastMonthCount {
 		return currentCount -lastMonthCount
@@ -199,94 +218,182 @@ func getTicketCountLastMonth(currentCount, lastMonthCount int) int {
 }
 
 // AddTicket adds a new ticket to the database
+// func (repo *repository) AddTicket(ticket dto.Ticket) error {
+// 	// Begin the transaction
+// 	return repo.db.Transaction(func(tx *gorm.DB) error {
+// 		// Get the last ticket ID
+// 		var lastTicket entity.Ticket
+// 		if err := tx.Order("ticket_id desc").First(&lastTicket).Error; err != nil {
+// 			if !errors.Is(err, gorm.ErrRecordNotFound) {
+// 				return err // Rollback on error if not found
+// 			}
+// 		}
+
+// 		// Generate the new serial ID (last ID + 1)
+// 		lastDocNum, _ := strconv.ParseInt(strings.Split(lastTicket.TicketNo, "/")[0], 10, 64) 
+// 		newID := lastDocNum + 1
+// 		// Generate the ticket number
+// 		ticketNumber := utils.GenerateTicketNumber(uint(newID), ticket.TicketType)
+
+// 		// Create the new ticket entity
+// 		newTicket := &entity.Ticket{
+// 			TicketNo:   ticketNumber, // Use the generated ticket number
+// 			TicketType: ticket.TicketType,
+// 			Subject:    ticket.Subject,
+// 			ReportDate: ticket.ReportDate,
+// 			AssignedID: ticket.AssignedID,
+// 			ReporterID: ticket.ReporterID,
+// 			Priority:   ticket.Priority,
+// 			Status:     ticket.Status,
+// 			Content:    ticket.Content,
+// 			CreatedBy:  ticket.CreatedBy,
+// 			UpdatedBy:  ticket.UpdatedBy,
+// 			CreatedAt:  ticket.CreatedAt,
+// 			UpdatedAt:  ticket.UpdatedAt,
+// 		}
+
+// 		// Insert the new ticket
+// 		if err := tx.Create(&newTicket).Error; err != nil {
+// 			return err // Rollback on error
+// 		}
+
+// 		// Loop through each activity related to the ticket
+// 		for _, activity := range ticket.Activities {
+// 			// Create the new activity entity
+// 			newActivity := entity.Activity{
+// 				TicketID:    newTicket.TicketID, // Associate the activity with the created ticket
+// 				Description: "Initial Activity",
+// 				CreatedBy:   ticket.CreatedBy,
+// 				UpdatedBy:   ticket.UpdatedBy,
+// 				CreatedAt:   ticket.CreatedAt,
+// 				UpdatedAt:   ticket.UpdatedAt,
+// 			}
+
+// 			// Insert the activity
+// 			if err := tx.Create(&newActivity).Error; err != nil {
+// 				return err // Rollback on error
+// 			}
+
+// 			// Prepare the documents for the activity
+// 			for index, doc := range activity.Documents {
+// 				filePath := fmt.Sprintf("./uploads/%s/%s", ticket.TicketType, doc.DocumentFile.Filename)
+
+// 				if err := helpers.SaveUploadedFile(doc.DocumentFile, filePath); err != nil {
+// 					return err
+// 				}
+
+// 				newDoc := entity.Document{
+// 					ActivityID:   newActivity.ActivityID,
+// 					DocumentName: doc.DocumentFile.Filename,
+// 					DocumentNo: utils.GenerateDocNumber(newID,  ticket.TicketType, index+1),
+// 					DocumentSize: doc.DocumentFile.Size,
+// 					DocumentType: doc.DocumentType,
+// 					DocumentPath: filePath,
+// 					CreatedBy:    ticket.CreatedBy,
+// 					UpdatedBy:    ticket.UpdatedBy,
+// 					CreatedAt:    ticket.CreatedAt,
+// 					UpdatedAt:    ticket.UpdatedAt,
+// 				}
+// 				// Insert the document
+// 				if err := tx.Create(&newDoc).Error; err != nil {
+// 					return err // Rollback on error
+// 				}
+// 			}
+// 		}
+
+// 		// Commit the transaction
+// 		return nil
+// 	})
+// }
+
 func (repo *repository) AddTicket(ticket dto.Ticket) error {
-	// Begin the transaction
-	return repo.db.Transaction(func(tx *gorm.DB) error {
-		// Get the last ticket ID
-		var lastTicket entity.Ticket
-		if err := tx.Order("ticket_id desc").First(&lastTicket).Error; err != nil {
-			if !errors.Is(err, gorm.ErrRecordNotFound) {
-				return err // Rollback on error if not found
+    return repo.db.Transaction(func(tx *gorm.DB) error {
+        // Get the last ticket ID
+        var lastTicket entity.Ticket
+        if err := tx.Order("ticket_id desc").First(&lastTicket).Error; err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+            return err // Rollback on error if not found
+        }
+
+        // Generate the new serial ID and ticket number
+        newID := getNextTicketID(lastTicket.TicketNo)
+        ticketNumber := utils.GenerateTicketNumber(uint(newID), ticket.TicketType)
+
+        // Create the new ticket entity
+        newTicket := entity.Ticket{
+            TicketNo:   ticketNumber,
+            TicketType: ticket.TicketType,
+            Subject:    ticket.Subject,
+            ReportDate: ticket.ReportDate,
+            AssignedID: ticket.AssignedID,
+            ReporterID: ticket.ReporterID,
+            Priority:   ticket.Priority,
+            Status:     ticket.Status,
+            Content:    ticket.Content,
+            CreatedBy:  ticket.CreatedBy,
+            UpdatedBy:  ticket.UpdatedBy,
+        }
+
+        // Insert the new ticket
+        if err := createEntity(tx, &newTicket); err != nil {
+            return err
+        }
+
+        // Prepare to batch insert activities and documents
+        activitiesToInsert := []entity.Activity{}
+        documentsToInsert := []entity.Document{}
+
+        for _, activity := range ticket.Activities {
+            newActivity := entity.Activity{
+                TicketID:    newTicket.TicketID,
+                Description: "Initial Activity",
+                CreatedBy:   ticket.CreatedBy,
+                UpdatedBy:   ticket.UpdatedBy,
+            }
+            activitiesToInsert = append(activitiesToInsert, newActivity)
+
+            // Prepare the documents for the activity
+            for index, doc := range activity.Documents {
+                filePath := fmt.Sprintf("./uploads/%s/%s", ticket.TicketType, doc.DocumentFile.Filename)
+
+                if err := helpers.SaveUploadedFile(doc.DocumentFile, filePath); err != nil {
+                    return err
+                }
+
+                newDoc := entity.Document{
+                    DocumentName: doc.DocumentFile.Filename,
+                    DocumentNo:   utils.GenerateDocNumber(uint(newID), ticket.TicketType, index+1),
+                    DocumentSize: doc.DocumentFile.Size,
+                    DocumentType: doc.DocumentType,
+                    DocumentPath: filePath,
+                    CreatedBy:    ticket.CreatedBy,
+                    UpdatedBy:    ticket.UpdatedBy,
+                }
+                documentsToInsert = append(documentsToInsert, newDoc)
+            }
+        }
+
+        // Bulk insert activities and documents
+        if err := tx.Create(&activitiesToInsert).Error; err != nil {
+            return err
+        }
+
+        // Associate documents with activities
+        for _, activity := range activitiesToInsert {
+            for j := range documentsToInsert {
+                documentsToInsert[j].ActivityID = activity.ActivityID // Update the ActivityID
+            }
+        }
+
+		if len(documentsToInsert) > 0 {
+			if err := tx.Create(&documentsToInsert).Error; err != nil {
+				return err
 			}
 		}
+        
 
-		// Generate the new serial ID (last ID + 1)
-		newID := lastTicket.TicketID + 1
-
-		// Generate the ticket number
-		ticketNumber := utils.GenerateTicketNumber(newID, ticket.TicketType)
-
-		// Create the new ticket entity
-		newTicket := &entity.Ticket{
-			TicketNo:   ticketNumber, // Use the generated ticket number
-			TicketType: ticket.TicketType,
-			Subject:    ticket.Subject,
-			ReportDate: ticket.ReportDate,
-			AssignedID: ticket.AssignedID,
-			ReporterID: ticket.ReporterID,
-			Priority:   ticket.Priority,
-			Status:     ticket.Status,
-			Content:    ticket.Content,
-			CreatedBy:  ticket.CreatedBy,
-			UpdatedBy:  ticket.UpdatedBy,
-			CreatedAt:  ticket.CreatedAt,
-			UpdatedAt:  ticket.UpdatedAt,
-		}
-
-		// Insert the new ticket
-		if err := tx.Create(&newTicket).Error; err != nil {
-			return err // Rollback on error
-		}
-
-		// Loop through each activity related to the ticket
-		for _, activity := range ticket.Activities {
-			// Create the new activity entity
-			newActivity := entity.Activity{
-				TicketID:    newID, // Associate the activity with the created ticket
-				Description: "Initial Activity",
-				CreatedBy:   ticket.CreatedBy,
-				UpdatedBy:   ticket.UpdatedBy,
-				CreatedAt:   ticket.CreatedAt,
-				UpdatedAt:   ticket.UpdatedAt,
-			}
-
-			// Insert the activity
-			if err := tx.Create(&newActivity).Error; err != nil {
-				return err // Rollback on error
-			}
-
-			// Prepare the documents for the activity
-			for index, doc := range activity.Documents {
-				filePath := fmt.Sprintf("./uploads/%s/%s", ticket.TicketType, doc.DocumentFile.Filename)
-
-				if err := helpers.SaveUploadedFile(doc.DocumentFile, filePath); err != nil {
-					return err
-				}
-
-				newDoc := entity.Document{
-					ActivityID:   newActivity.ActivityID,
-					DocumentName: doc.DocumentFile.Filename,
-					DocumentNo: utils.GenerateDocNumber(newID,  ticket.TicketType, index+1),
-					DocumentSize: doc.DocumentFile.Size,
-					DocumentType: doc.DocumentType,
-					DocumentPath: filePath,
-					CreatedBy:    ticket.CreatedBy,
-					UpdatedBy:    ticket.UpdatedBy,
-					CreatedAt:    ticket.CreatedAt,
-					UpdatedAt:    ticket.UpdatedAt,
-				}
-				// Insert the document
-				if err := tx.Create(&newDoc).Error; err != nil {
-					return err // Rollback on error
-				}
-			}
-		}
-
-		// Commit the transaction
-		return nil
-	})
+        return nil
+    })
 }
-
 
 // UpdateTicket updates an existing ticket in the database
 func (repo *repository) UpdateTicket(ticket dto.Ticket) error {
@@ -311,6 +418,19 @@ func (repo *repository) UpdateTicket(ticket dto.Ticket) error {
 	return nil
 }
 
+func (repo *repository) CloseTicket(ticket dto.Ticket) error {
+	updateTicket := &entity.Ticket{
+		Status: ticket.Status,
+		UpdatedAt: ticket.UpdatedAt,
+		UpdatedBy: ticket.UpdatedBy,
+	}
+
+	if err := repo.db.Model(&entity.Ticket{}).Where("ticket_id = ?", ticket.TicketID).Updates(&updateTicket).Error; err != nil {
+		return err
+	}
+	return nil
+}
+
 // DeleteTicket deletes a ticket from the database
 func (repo *repository) DeleteTicket(id string) error {
 	if err := repo.db.Where("ticket_id = ?", id).Delete(&entity.Ticket{}).Error; err != nil {
@@ -322,8 +442,31 @@ func (repo *repository) DeleteTicket(id string) error {
 // GetTicketById retrieves a specific ticket by ID from the database
 func (repo *repository) GetTicketById(id string) (*entity.Ticket, error) {
 	ticket := &entity.Ticket{}
-	if err := repo.db.Model(&entity.Ticket{}).Preload("Activities").Preload("Activities.Documents").Preload("Assigned").Preload("Reporter").Where("ticket_id = ?", id).First(&ticket).Error; err != nil {
+	userFields := "id, username"
+	if err := repo.db.Model(&entity.Ticket{}).Preload("Activities.Updater").Preload("Activities.Documents").
+	Preload("Updater", func(db *gorm.DB) *gorm.DB {
+		return db.Select(userFields)
+	}).
+	Preload("Assigned", func(db *gorm.DB) *gorm.DB {
+		return db.Select(userFields)
+	}).
+	Preload("Reporter", func(db *gorm.DB) *gorm.DB {
+		return db.Select(userFields)
+	}).Where("ticket_id = ?", id).First(&ticket).Error; err != nil {
 		return nil, err
 	}
 	return ticket, nil
+}
+
+
+
+// Helper function to get the next ticket ID
+func getNextTicketID(ticketNo string) int64 {
+    lastDocNum, _ := strconv.ParseInt(strings.Split(ticketNo, "/")[0], 10, 64)
+    return lastDocNum + 1
+}
+
+// Helper function to create an entity and handle errors
+func createEntity(tx *gorm.DB, entity interface{}) error {
+    return tx.Create(entity).Error
 }

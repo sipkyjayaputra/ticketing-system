@@ -10,6 +10,9 @@ type User struct {
 	Username  string     `gorm:"column:username;unique" json:"username"`    // Username harus unik
 	Password  string     `gorm:"column:password" json:"password,omitempty"` // Password pengguna
 	Email     string     `gorm:"column:email;unique" json:"email"`          // Email pengguna, harus unik
+	Phone     string     `gorm:"column:phone;unique" json:"phone"`          // Email pengguna, harus unik
+	Team     string     `gorm:"column:team" json:"team"`          // Email pengguna, harus unik
+	Workpalce     string     `gorm:"column:workplace" json:"workplace"`          // Email pengguna, harus unik
 	Role      string     `gorm:"column:role" json:"role"`
 	Photo     string     `gorm:"column:photo;default:''" json:"photo"`
 	CreatedAt *time.Time `gorm:"autoCreateTime" json:"created_at,omitempty"`
@@ -43,29 +46,31 @@ type Activity struct {
 
 	// Relationships
 	Documents []Document `gorm:"foreignKey:ActivityID" json:"documents"` // Multiple documents related to the activity
+	Updater    User      `gorm:"foreignKey:UpdatedBy;references:ID" json:"updater"`  
 }
 
 
 type Ticket struct {
-	TicketID   uint      	   `gorm:"primaryKey;autoIncrement" json:"ticket_id"`      // Serial ID for the ticket
-	TicketNo   string          `gorm:"column:ticket_no" json:"ticket_no"` // Unique ticket number
-	ReporterID uint            `gorm:"column:reporter_id" json:"reporter_id"`        // ID of the user who reported the ticket
-	TicketType string          `gorm:"column:ticket_type" json:"ticket_type"`        // Type of ticket
-	Subject    string          `gorm:"column:subject" json:"subject"`                // Subject of the ticket
-	ReportDate time.Time       `gorm:"column:report_date" json:"report_date"`        // Date the ticket was reported
-	AssignedID uint            `gorm:"column:assigned_id" json:"assigned_id"`        // ID of the user assigned to the ticket
-	Priority   string          `gorm:"column:priority" json:"priority"`              // Priority of the ticket
-	Status     string          `gorm:"column:status" json:"status"`                  // Status of the ticket
-	Content    json.RawMessage `gorm:"column:content" json:"content"`                // Raw JSON content of the ticket
-	CreatedAt  time.Time       `gorm:"autoCreateTime" json:"created_at"`             // Ticket creation timestamp
-	UpdatedAt  time.Time       `gorm:"autoUpdateTime" json:"updated_at"`             // Ticket update timestamp
-	CreatedBy  uint            `gorm:"column:created_by" json:"created_by"`          // User who created the ticket
-	UpdatedBy  uint            `gorm:"column:updated_by" json:"updated_by"`          // User who last updated the ticket
+	TicketID   uint            `gorm:"primaryKey;autoIncrement" json:"ticket_id"`      // Serial ID for the ticket
+	TicketNo   string          `gorm:"column:ticket_no" json:"ticket_no"`               // Unique ticket number
+	ReporterID uint            `gorm:"column:reporter_id" json:"reporter_id"`           // ID of the user who reported the ticket
+	TicketType string          `gorm:"column:ticket_type" json:"ticket_type"`           // Type of ticket
+	Subject    string          `gorm:"column:subject" json:"subject"`                   // Subject of the ticket
+	ReportDate time.Time       `gorm:"column:report_date" json:"report_date"`           // Date the ticket was reported
+	AssignedID uint            `gorm:"column:assigned_id" json:"assigned_id"`           // ID of the user assigned to the ticket
+	Priority   string          `gorm:"column:priority" json:"priority"`                 // Priority of the ticket
+	Status     string          `gorm:"column:status" json:"status"`                     // Status of the ticket
+	Content    json.RawMessage `gorm:"column:content" json:"content"`                   // Raw JSON content of the ticket
+	CreatedAt  time.Time       `gorm:"autoCreateTime" json:"created_at"`                // Ticket creation timestamp
+	UpdatedAt  time.Time       `gorm:"autoUpdateTime" json:"updated_at"`                // Ticket update timestamp
+	CreatedBy  uint            `gorm:"column:created_by" json:"created_by"`             // User who created the ticket
+	UpdatedBy  uint            `gorm:"column:updated_by" json:"updated_by"`             // User who last updated the ticket
 
 	// Relationships
-	Assigned   User       `gorm:"foreignKey:AssignedID" json:"assigned"` // Assigned user relationship
-	Reporter   User       `gorm:"foreignKey:ReporterID" json:"reporter"` // Reporter user relationship
-	Activities []Activity `gorm:"foreignKey:TicketID" json:"activities"` // Multiple activities related to the ticket
+	Assigned   User       `gorm:"foreignKey:AssignedID;references:ID" json:"assigned"`   // Assigned user relationship
+	Reporter   User       `gorm:"foreignKey:ReporterID;references:ID" json:"reporter"`   // Reporter user relationship
+	Updater    User       `gorm:"foreignKey:UpdatedBy;references:ID" json:"updater"`     // User who last updated the ticket
+	Activities []Activity  `gorm:"foreignKey:TicketID" json:"activities"`    // Multiple activities related to the ticket
 }
 
 type TicketSummary struct {

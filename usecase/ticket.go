@@ -15,18 +15,6 @@ func (uc *usecase) GetTickets(filter dto.TicketFilter) (*utils.ResponseContainer
 		return nil, utils.BuildInternalErrorResponse("failed to get tickets", err.Error())
 	}
 
-	for i := range tickets {
-		tickets[i].Assigned.Password = ""
-		tickets[i].Assigned.CreatedAt = nil
-		tickets[i].Assigned.UpdatedAt = nil
-		tickets[i].Assigned.CreatedBy = ""
-		tickets[i].Assigned.UpdatedBy = ""
-		tickets[i].Reporter.Password = ""
-		tickets[i].Reporter.CreatedAt = nil
-		tickets[i].Reporter.UpdatedAt = nil
-		tickets[i].Reporter.CreatedBy = ""
-		tickets[i].Reporter.UpdatedBy = ""
-	}
 
 	return utils.BuildSuccessResponse(tickets), nil
 }
@@ -65,6 +53,21 @@ func (uc *usecase) UpdateTicket(ticket dto.Ticket, updater uint, ticketNo string
 	ticket.UpdatedAt = time.Now()
 
 	if err := uc.repo.UpdateTicket(ticket); err != nil {
+		return nil, utils.BuildInternalErrorResponse("failed to update ticket", err.Error())
+	}
+
+	return utils.BuildSuccessResponse(nil), nil
+}
+
+func (uc *usecase) CloseTicket(req dto.CloseTicket, updater uint) (*utils.ResponseContainer, *utils.ErrorContainer) {
+	ticket := dto.Ticket{
+		Status: req.Status,
+		TicketID: req.TicketID,
+		UpdatedBy: updater,
+		UpdatedAt: time.Now(),
+	}
+
+	if err := uc.repo.CloseTicket(ticket); err != nil {
 		return nil, utils.BuildInternalErrorResponse("failed to update ticket", err.Error())
 	}
 

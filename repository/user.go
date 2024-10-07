@@ -20,6 +20,9 @@ func (repo *repository) AddUser(user dto.User) error {
 	newUser := &entity.User{
 		Username:  user.Username,
 		Password:  user.Password,
+		Phone: 		user.Phone,
+		Workpalce: 	user.Workpalce,
+		Team: 		user.Team,
 		Email:     user.Email,
 		Role:      user.Role,
 		CreatedBy: user.CreatedBy,

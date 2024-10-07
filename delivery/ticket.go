@@ -15,32 +15,48 @@ import (
 )
 
 func (del *delivery) GetTickets(c *gin.Context) {
-	funcName := "GetTickets"
-	startTime := time.Now()
-	utils.LoggerProcess("info", fmt.Sprintf("Upper %s, [START]: Processing Request", funcName), del.logger)
+    funcName := "GetTickets"
+    startTime := time.Now()
+    utils.LoggerProcess("info", fmt.Sprintf("Upper %s, [START]: Processing Request", funcName), del.logger)
 
-	ticketFilter := dto.TicketFilter{
-		TicketType:      c.Query("ticket_type"),
-		Priority:        c.Query("priority"),
-		Status:          c.Query("status"),
-		ReportStartDate: c.Query("report_start_date"),
-		ReportEndDate:   c.Query("report_end_date"),
-		Terms:           c.Query("terms"),
-		Limit:           c.Query("limit"),
-		Offset:          c.Query("offset"),
-	}
+    ticketFilter := dto.TicketFilter{
+        TicketType:      c.Query("ticket_type"),
+        Priority:        c.Query("priority"),
+        Status:          c.Query("status"),
+        ReportStartDate: c.Query("report_start_date"),
+        ReportEndDate:   c.Query("report_end_date"),
+        Terms:           c.Query("terms"),
+        Limit:           c.Query("limit"),
+        Offset:          c.Query("offset"),
+    }
 
-	res, err := del.uc.GetTickets(ticketFilter)
+    userID, _ := c.Get("user_id")
+    role, _ := c.Get("role")
 
-	if err != nil {
-		utils.LoggerProcess("error", fmt.Sprintf("Process Failed %s", err.Response.Errors), del.logger)
-		c.JSON(err.Response.StatusCode, err)
-		return
-	}
+    // Convert userID to string if it's of type uint
+    reporterIDStr := c.Query("reporter_id")
+    if reporterIDStr != "" {
+        ticketFilter.ReporterID = reporterIDStr
+    } else {
+        // Ensure userID is converted to string correctly
+        ticketFilter.ReporterID = fmt.Sprintf("%v", userID)
+    }
 
-	utils.LoggerProcess("info", fmt.Sprintf("Lower %s, [END]: Elapsed Time %v", funcName, time.Since(startTime)), del.logger)
-	c.JSON(res.Response.StatusCode, res)
+    if role == "admin" {
+        ticketFilter.ReporterID = ""
+    } 
+
+    res, err := del.uc.GetTickets(ticketFilter)
+    if err != nil {
+        utils.LoggerProcess("error", fmt.Sprintf("Process Failed %s", err.Response.Errors), del.logger)
+        c.JSON(err.Response.StatusCode, err)
+        return
+    }
+
+    utils.LoggerProcess("info", fmt.Sprintf("Lower %s, [END]: Elapsed Time %v", funcName, time.Since(startTime)), del.logger)
+    c.JSON(res.Response.StatusCode, res)
 }
+
 
 func (del *delivery) GetTicketSummary(c *gin.Context) {
 	funcName := "GetTicketSummary"
@@ -148,6 +164,36 @@ func (del *delivery) UpdateTicket(c *gin.Context) {
 	updater, _ := c.Get("user_id")
 	ticketNo := c.Param("id")
 	res, err := del.uc.UpdateTicket(request, updater.(uint), ticketNo)
+
+	if err != nil {
+		utils.LoggerProcess("error", fmt.Sprintf("Process Failed %s", err.Response.Errors), del.logger)
+		c.JSON(err.Response.StatusCode, err)
+		return
+	}
+
+	utils.LoggerProcess("info", fmt.Sprintf("Lower %s, [END]: Elapsed Time %v", funcName, time.Since(startTime)), del.logger)
+	c.JSON(res.Response.StatusCode, res)
+}
+
+func (del *delivery) CloseTicket(c *gin.Context) {
+	funcName := "CloseTicket"
+	startTime := time.Now()
+	utils.LoggerProcess("info", fmt.Sprintf("Upper %s, [START]: Processing Request", funcName), del.logger)
+
+	req := dto.CloseTicket{}
+	errBind := c.ShouldBindJSON(&req)
+	utils.LoggerProcess("info", fmt.Sprintf("Request Body: %+v", req), del.logger)
+
+	if errBind != nil {
+		utils.LoggerProcess("error", fmt.Sprintf("Validation failed %s", errBind.Error()), del.logger)
+		resp := utils.BuildBadRequestResponse("bad request", errBind.Error())
+		c.JSON(resp.Response.StatusCode, resp)
+		return
+	}
+
+	updater, _ := c.Get("user_id")
+
+	res, err := del.uc.CloseTicket(req, updater.(uint))
 
 	if err != nil {
 		utils.LoggerProcess("error", fmt.Sprintf("Process Failed %s", err.Response.Errors), del.logger)
