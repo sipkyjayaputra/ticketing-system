@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/sipkyjayaputra/ticketing-system/helpers"
@@ -20,8 +21,26 @@ func (repo *repository) GetActivitiesByTicketNo(id string) ([]entity.Activity, e
 
 // AddActivity adds a new activity to the database
 func (repo *repository) AddActivity(activity dto.Activity) error {
+
 	// Begin the transaction
 	return repo.db.Transaction(func(tx *gorm.DB) error {
+		// UPDATE TICKET STATUS
+		activities := []entity.Activity{}
+
+		if err := repo.db.Model(&entity.Activity{}).Where("ticket_id = ?", activity.TicketID).Find(&activities).Error; err != nil {
+			if !errors.Is(err, gorm.ErrRecordNotFound) {
+				return err // Rollback on error if not found
+			}
+		}
+
+		if len(activities) == 1 {
+			// Update ticket status into In Progress
+			if err := tx.Model(&entity.Ticket{}).Where("ticket_id = ?", activity.TicketID).Update("status", "In Progress").Error; err != nil {
+				return err
+			}
+		}
+		// UPDATE TICKET STATUS
+
 		// Create the new activity entity
 		newActivity := &entity.Activity{
 			TicketID:    activity.TicketID, // Associate the activity with the provided ticketNo
