@@ -12,7 +12,7 @@ import (
 )
 
 func (uc *usecase) SignIn(request dto.SignIn) (*utils.ResponseContainer, *utils.ErrorContainer) {
-	user, err := uc.repo.SignIn(request.Username)
+	user, err := uc.repo.SignIn(request.Email)
 
 	if err != nil {
 		return nil, utils.BuildInternalErrorResponse("failed to sign in", err.Error())
@@ -53,8 +53,8 @@ func (uc *usecase) RefreshToken(token string) (*utils.ResponseContainer, *utils.
 }
 
 func (uc *usecase) handleDefaultSignIn(password string, user entity.User) (*utils.ResponseContainer, *utils.ErrorContainer) {
-	if user.Username == "" {
-		return nil, utils.BuildUnauthorizedResponse("invalid username", "user not found")
+	if user.Email == "" {
+		return nil, utils.BuildUnauthorizedResponse("invalid email", "user not found")
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {

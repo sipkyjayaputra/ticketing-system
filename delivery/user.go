@@ -139,7 +139,7 @@ func (del *delivery) UpdateUserPhoto(c *gin.Context) {
 
 	form, errForm := c.MultipartForm()
 	if errForm != nil {
-		utils.LoggerProcess("error", fmt.Sprintf("%s", errForm.Error()), del.logger)
+		utils.LoggerProcess("error", errForm.Error(), del.logger)
 		resp := utils.BuildBadRequestResponse("bad request", errForm.Error())
 		c.JSON(resp.Response.StatusCode, resp)
 		return
@@ -148,7 +148,7 @@ func (del *delivery) UpdateUserPhoto(c *gin.Context) {
 	photo := form.File["photo"]
 	if len(photo) == 0 {
 		errPhoto := errors.New("invalid photo")
-		utils.LoggerProcess("error", fmt.Sprintf("%s", errPhoto.Error()), del.logger)
+		utils.LoggerProcess("error", errPhoto.Error(), del.logger)
 		resp := utils.BuildBadRequestResponse("bad request", errPhoto.Error())
 		c.JSON(resp.Response.StatusCode, resp)
 		return
@@ -157,7 +157,7 @@ func (del *delivery) UpdateUserPhoto(c *gin.Context) {
 	id := c.Param("id")
 	userID, errUserId := strconv.ParseInt(id, 10, 64)
 	if errUserId != nil {
-		utils.LoggerProcess("error", fmt.Sprintf("%s", errUserId.Error()), del.logger)
+		utils.LoggerProcess("error",  errUserId.Error(), del.logger)
 		resp := utils.BuildBadRequestResponse("bad request", errUserId.Error())
 		c.JSON(resp.Response.StatusCode, resp)
 		return
@@ -167,7 +167,7 @@ func (del *delivery) UpdateUserPhoto(c *gin.Context) {
 	claimRole, _ := c.Get("role")
 	if !strings.Contains(claimRole.(string), "admin") && claimId.(string) != id {
 		err := errors.New("unauthorized access")
-		utils.LoggerProcess("error", fmt.Sprintf("%s", err.Error()), del.logger)
+		utils.LoggerProcess("error",  err.Error(), del.logger)
 		resp := utils.BuildForbiddenAccessResponse(err.Error())
 		c.JSON(resp.Response.StatusCode, resp)
 		return
@@ -206,7 +206,7 @@ func (del *delivery) UpdateUserPassword(c *gin.Context) {
 	id := c.Param("id")
 	userID, errUserId := strconv.ParseInt(id, 10, 64)
 	if errUserId != nil {
-		utils.LoggerProcess("error", fmt.Sprintf("%s", errUserId.Error()), del.logger)
+		utils.LoggerProcess("error",  errUserId.Error(), del.logger)
 		resp := utils.BuildBadRequestResponse("bad request", errUserId.Error())
 		c.JSON(resp.Response.StatusCode, resp)
 		return
@@ -216,7 +216,7 @@ func (del *delivery) UpdateUserPassword(c *gin.Context) {
 	claimRole, _ := c.Get("role")
 	if !strings.Contains(claimRole.(string), "admin") && claimId.(string) != id {
 		err := errors.New("unauthorized access")
-		utils.LoggerProcess("error", fmt.Sprintf("%s", err.Error()), del.logger)
+		utils.LoggerProcess("error", err.Error(), del.logger)
 		resp := utils.BuildForbiddenAccessResponse(err.Error())
 		c.JSON(resp.Response.StatusCode, resp)
 		return
@@ -224,7 +224,7 @@ func (del *delivery) UpdateUserPassword(c *gin.Context) {
 
 	if request.NewPassword != request.VerifyPassword {
 		errPhoto := errors.New("password did not match")
-		utils.LoggerProcess("error", fmt.Sprintf("%s", errPhoto.Error()), del.logger)
+		utils.LoggerProcess("error",  errPhoto.Error(), del.logger)
 		resp := utils.BuildBadRequestResponse("bad request", errPhoto.Error())
 		c.JSON(resp.Response.StatusCode, resp)
 		return

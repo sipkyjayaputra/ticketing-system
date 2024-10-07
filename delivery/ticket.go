@@ -66,7 +66,7 @@ func (del *delivery) AddTicket(c *gin.Context) {
 
 	form, errForm := c.MultipartForm()
 	if errForm != nil {
-		utils.LoggerProcess("error", fmt.Sprintf("%s", errForm.Error()), del.logger)
+		utils.LoggerProcess("error", errForm.Error(), del.logger)
 		resp := utils.BuildBadRequestResponse("bad request", errForm.Error())
 		c.JSON(resp.Response.StatusCode, resp)
 		return
@@ -124,7 +124,7 @@ func (del *delivery) UpdateTicket(c *gin.Context) {
 
 	form, errForm := c.MultipartForm()
 	if errForm != nil {
-		utils.LoggerProcess("error", fmt.Sprintf("%s", errForm.Error()), del.logger)
+		utils.LoggerProcess("error",errForm.Error(), del.logger)
 		resp := utils.BuildBadRequestResponse("bad request", errForm.Error())
 		c.JSON(resp.Response.StatusCode, resp)
 		return

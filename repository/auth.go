@@ -2,9 +2,9 @@ package repository
 
 import "github.com/sipkyjayaputra/ticketing-system/model/entity"
 
-func (repo *repository) SignIn(username string) (entity.User, error) {
+func (repo *repository) SignIn(email string) (entity.User, error) {
 	user := entity.User{}
-	if err := repo.db.Where("username = ?", username).Find(&user).Error; err != nil {
+	if err := repo.db.Where("email = ?", email).Find(&user).Error; err != nil {
 		return user, err
 	}
 

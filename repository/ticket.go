@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -9,6 +10,7 @@ import (
 	"github.com/sipkyjayaputra/ticketing-system/helpers"
 	"github.com/sipkyjayaputra/ticketing-system/model/dto"
 	"github.com/sipkyjayaputra/ticketing-system/model/entity"
+	"github.com/sipkyjayaputra/ticketing-system/utils"
 	"gorm.io/gorm"
 )
 
@@ -58,7 +60,7 @@ func (repo *repository) GetTickets(filter dto.TicketFilter) ([]entity.Ticket, er
 	}
 
 	// Preload relationships and order by creation date
-	if err := query.Preload("Activities").Preload("Assigned").Preload("Reporter").Order("created_at DESC").Find(&tickets).Error; err != nil {
+	if err := query.Preload("Activities.Documents").Preload("Assigned").Preload("Reporter").Order("created_at DESC").Find(&tickets).Error; err != nil {
 		return nil, err
 	}
 	return tickets, nil
@@ -158,15 +160,19 @@ func (repo *repository) GetTicketSummary() (*entity.TicketSummary, error) {
 
 	// Calculate notes
 	ticketSummary.NewTicketCount = newTicketCount
+	ticketSummary.NewTicketCountLastMonth = getTicketCountLastMonth(newTicketCount, lastMonthNewTicketCount)
 	ticketSummary.NewTicketNote = getTicketNote(newTicketCount, lastMonthNewTicketCount)
 
 	ticketSummary.OpenTicketCount = openTicketCount
+	ticketSummary.OpenTicketCountLastMonth = getTicketCountLastMonth(openTicketCount, lastMonthOpenTicketCount)
 	ticketSummary.OpenTicketNote = getTicketNote(openTicketCount, lastMonthOpenTicketCount)
 
 	ticketSummary.PendingTicketCount = pendingTicketCount
+	ticketSummary.PendingTicketCountLastMonth = getTicketCountLastMonth(pendingTicketCount, lastMonthPendingTicketCount)
 	ticketSummary.PendingTicketNote = getTicketNote(pendingTicketCount, lastMonthPendingTicketCount)
 
 	ticketSummary.ClosedTicketCount = closedTicketCount
+	ticketSummary.ClosedTicketCountLastMonth = getTicketCountLastMonth(closedTicketCount, lastMonthClosedTicketCount)
 	ticketSummary.ClosedTicketNote = getTicketNote(closedTicketCount, lastMonthClosedTicketCount)
 
 	return &ticketSummary, nil
@@ -175,11 +181,20 @@ func (repo *repository) GetTicketSummary() (*entity.TicketSummary, error) {
 // Helper function to generate the note
 func getTicketNote(currentCount, lastMonthCount int) string {
 	if currentCount > lastMonthCount {
-		return fmt.Sprintf("+%d than last month", currentCount-lastMonthCount)
+		return "+"
 	} else if currentCount < lastMonthCount {
-		return fmt.Sprintf("-%d than last month", lastMonthCount-currentCount)
+		return "-"
 	} else {
-		return "No change than last month"
+		return ""
+	}
+}
+func getTicketCountLastMonth(currentCount, lastMonthCount int) int {
+	if currentCount > lastMonthCount {
+		return currentCount -lastMonthCount
+	} else if currentCount < lastMonthCount {
+		return lastMonthCount - currentCount
+	} else {
+		return 0
 	}
 }
 
@@ -187,9 +202,23 @@ func getTicketNote(currentCount, lastMonthCount int) string {
 func (repo *repository) AddTicket(ticket dto.Ticket) error {
 	// Begin the transaction
 	return repo.db.Transaction(func(tx *gorm.DB) error {
+		// Get the last ticket ID
+		var lastTicket entity.Ticket
+		if err := tx.Order("ticket_id desc").First(&lastTicket).Error; err != nil {
+			if !errors.Is(err, gorm.ErrRecordNotFound) {
+				return err // Rollback on error if not found
+			}
+		}
+
+		// Generate the new serial ID (last ID + 1)
+		newID := lastTicket.TicketID + 1
+
+		// Generate the ticket number
+		ticketNumber := utils.GenerateTicketNumber(newID, ticket.TicketType)
+
 		// Create the new ticket entity
 		newTicket := &entity.Ticket{
-			TicketNo:   ticket.TicketNo,
+			TicketNo:   ticketNumber, // Use the generated ticket number
 			TicketType: ticket.TicketType,
 			Subject:    ticket.Subject,
 			ReportDate: ticket.ReportDate,
@@ -213,7 +242,7 @@ func (repo *repository) AddTicket(ticket dto.Ticket) error {
 		for _, activity := range ticket.Activities {
 			// Create the new activity entity
 			newActivity := entity.Activity{
-				TicketNo:    newTicket.TicketNo, // Associate the activity with the created ticket
+				TicketID:    newID, // Associate the activity with the created ticket
 				Description: "Initial Activity",
 				CreatedBy:   ticket.CreatedBy,
 				UpdatedBy:   ticket.UpdatedBy,
@@ -221,13 +250,13 @@ func (repo *repository) AddTicket(ticket dto.Ticket) error {
 				UpdatedAt:   ticket.UpdatedAt,
 			}
 
-			// Insert the activity along with its documents
+			// Insert the activity
 			if err := tx.Create(&newActivity).Error; err != nil {
 				return err // Rollback on error
 			}
 
 			// Prepare the documents for the activity
-			for _, doc := range activity.Documents {
+			for index, doc := range activity.Documents {
 				filePath := fmt.Sprintf("./uploads/%s/%s", ticket.TicketType, doc.DocumentFile.Filename)
 
 				if err := helpers.SaveUploadedFile(doc.DocumentFile, filePath); err != nil {
@@ -237,6 +266,7 @@ func (repo *repository) AddTicket(ticket dto.Ticket) error {
 				newDoc := entity.Document{
 					ActivityID:   newActivity.ActivityID,
 					DocumentName: doc.DocumentFile.Filename,
+					DocumentNo: utils.GenerateDocNumber(newID,  ticket.TicketType, index+1),
 					DocumentSize: doc.DocumentFile.Size,
 					DocumentType: doc.DocumentType,
 					DocumentPath: filePath,
@@ -245,7 +275,7 @@ func (repo *repository) AddTicket(ticket dto.Ticket) error {
 					CreatedAt:    ticket.CreatedAt,
 					UpdatedAt:    ticket.UpdatedAt,
 				}
-				// Insert the activity along with its documents
+				// Insert the document
 				if err := tx.Create(&newDoc).Error; err != nil {
 					return err // Rollback on error
 				}
@@ -256,6 +286,7 @@ func (repo *repository) AddTicket(ticket dto.Ticket) error {
 		return nil
 	})
 }
+
 
 // UpdateTicket updates an existing ticket in the database
 func (repo *repository) UpdateTicket(ticket dto.Ticket) error {
@@ -274,7 +305,7 @@ func (repo *repository) UpdateTicket(ticket dto.Ticket) error {
 		UpdatedAt:  ticket.UpdatedAt,
 	}
 
-	if err := repo.db.Model(&entity.Ticket{}).Where("ticket_no = ?", ticket.TicketNo).Updates(&updateTicket).Error; err != nil {
+	if err := repo.db.Model(&entity.Ticket{}).Where("ticket_id = ?", ticket.TicketID).Updates(&updateTicket).Error; err != nil {
 		return err
 	}
 	return nil
@@ -282,7 +313,7 @@ func (repo *repository) UpdateTicket(ticket dto.Ticket) error {
 
 // DeleteTicket deletes a ticket from the database
 func (repo *repository) DeleteTicket(id string) error {
-	if err := repo.db.Where("ticket_no = ?", id).Delete(&entity.Ticket{}).Error; err != nil {
+	if err := repo.db.Where("ticket_id = ?", id).Delete(&entity.Ticket{}).Error; err != nil {
 		return err
 	}
 	return nil
@@ -291,7 +322,7 @@ func (repo *repository) DeleteTicket(id string) error {
 // GetTicketById retrieves a specific ticket by ID from the database
 func (repo *repository) GetTicketById(id string) (*entity.Ticket, error) {
 	ticket := &entity.Ticket{}
-	if err := repo.db.Model(&entity.Ticket{}).Preload("Activities").Preload("Activities.Documents").Preload("Assigned").Preload("Reporter").Where("ticket_no = ?", id).First(&ticket).Error; err != nil {
+	if err := repo.db.Model(&entity.Ticket{}).Preload("Activities").Preload("Activities.Documents").Preload("Assigned").Preload("Reporter").Where("ticket_id = ?", id).First(&ticket).Error; err != nil {
 		return nil, err
 	}
 	return ticket, nil

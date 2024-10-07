@@ -17,7 +17,7 @@ func (del *delivery) SignIn(c *gin.Context) {
 
 	req := dto.SignIn{}
 	err := c.ShouldBindJSON(&req)
-	utils.LoggerProcess("info", fmt.Sprintf("Request Body: %+v", dto.SignIn{Username: req.Username, Password: "******"}), del.logger)
+	utils.LoggerProcess("info", fmt.Sprintf("Request Body: %+v", dto.SignIn{Email: req.Email, Password: "******"}), del.logger)
 
 	if err != nil {
 		utils.LoggerProcess("error", fmt.Sprintf("Validation failed %s", err.Error()), del.logger)
