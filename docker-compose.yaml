@@ -11,5 +11,24 @@ services:
     volumes:
       - mysql_data:/var/lib/mysql
 
+  api:
+    build: .
+    environment:
+      MYSQL_HOST: mysql
+      MYSQL_USER: root
+      MYSQL_PASSWORD: root
+      MYSQL_PORT: "3306"
+      MYSQL_DB_NAME: ticketing_system
+    ports:
+      - "8080:8080" # Ubah port sesuai kebutuhan API Anda
+    depends_on:
+      - mysql
+    restart: always
+    volumes:
+      - app_uploads:/app/uploads # Sesuaikan path
+      - app_logs:/app/logs # Sesuaikan path
+
 volumes:
   mysql_data:
+  app_uploads:
+  app_logs:
