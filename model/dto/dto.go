@@ -16,7 +16,8 @@ type CloseTicket struct {
 }
 
 type UpdateUserPassword struct {
-	ID             uint   `json:"id"`
+	ID             string   `json:"id"`
+	CurrentPassword string `json:"current_password"`
 	NewPassword    string `json:"new_password"`
 	VerifyPassword string `json:"verify_password"`
 }

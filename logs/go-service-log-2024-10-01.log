@@ -1,7 +1,0 @@
-time="2024-10-01T19:46:27+07:00" level=info msg="[INFO] Upper SignIn, [START]: Processing Request"
-time="2024-10-01T19:46:27+07:00" level=info msg="[INFO] Request Body: {Username:johndoe Password:******}"
-time="2024-10-01T19:46:27+07:00" level=info msg="[INFO] Lower SignIn, [END]: Elapsed time 113.0704ms"
-time="2024-10-01T19:46:32+07:00" level=info msg="[INFO] Upper GetTicketSummary, [START]: Processing Request"
-time="2024-10-01T19:46:32+07:00" level=error msg="[ERROR] Process Failed [Error 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '*) AS new_ticket_count FROM `tickets` WHERE MONTH(created_at) = ? AND YEAR(creat' at line 1]"
-time="2024-10-01T19:48:53+07:00" level=info msg="[INFO] Upper GetTicketSummary, [START]: Processing Request"
-time="2024-10-01T19:48:53+07:00" level=info msg="[INFO] Lower GetTicketSummary, [END]: Elapsed Time 369.4185ms"

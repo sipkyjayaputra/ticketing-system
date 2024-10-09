@@ -3,6 +3,7 @@ version: "3.8"
 services:
   mysql:
     image: mysql:latest
+    container_name: mysql_container
     environment:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: ticketing_system
@@ -12,7 +13,8 @@ services:
       - mysql_data:/var/lib/mysql
 
   api:
-    build: .
+    image: vitkynanda/sv-ticket-service
+    container_name: api_container
     environment:
       MYSQL_HOST: mysql
       MYSQL_USER: root
@@ -20,15 +22,23 @@ services:
       MYSQL_PORT: "3306"
       MYSQL_DB_NAME: ticketing_system
     ports:
-      - "8080:8080" # Ubah port sesuai kebutuhan API Anda
+      - "8080:8080"
     depends_on:
       - mysql
     restart: always
     volumes:
-      - app_uploads:/app/uploads # Sesuaikan path
-      - app_logs:/app/logs # Sesuaikan path
+      - ./uploads:/uploads
+
+  app:
+    image: vitkynanda/sv-ticket-app
+    container_name: app_container
+    environment:
+      NEXT_PUBLIC_BASE_API_URL: https://ticket.sharingvisionjakarta.com/api/v1
+    ports:
+      - "3000:3000"
+    depends_on:
+      - api
+    restart: always
 
 volumes:
   mysql_data:
-  app_uploads:
-  app_logs:

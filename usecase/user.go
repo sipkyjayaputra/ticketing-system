@@ -71,15 +71,25 @@ func (uc *usecase) UpdateUserPhoto(request dto.UpdateUserPhoto) (*utils.Response
 }
 
 func (uc *usecase) UpdateUserPassword(request dto.UpdateUserPassword) (*utils.ResponseContainer, *utils.ErrorContainer) {
+	currentPassword, err := uc.repo.GetUserPassword(request.ID)
+	if err != nil {
+		return nil, utils.BuildInternalErrorResponse("failed to get user password", err.Error())
+	}
+
+	if err := bcrypt.CompareHashAndPassword([]byte(currentPassword), []byte(request.CurrentPassword)); err != nil {
+		return nil, utils.BuildBadRequestResponse("invalid password", err.Error())
+	}
 	hashedPassword, errHashedPassword := bcrypt.GenerateFromPassword([]byte(request.NewPassword), bcrypt.DefaultCost)
 	if errHashedPassword != nil {
 		return nil, utils.BuildBadRequestResponse("failed to generate password", errHashedPassword.Error())
 	}
 
 	request.NewPassword = string(hashedPassword)
-	err := uc.repo.UpdateUserPassword(request)
-	if err != nil {
-		return nil, utils.BuildInternalErrorResponse("failed to get user", err.Error())
+
+	errUpdate := uc.repo.UpdateUserPassword(request)
+
+	if errUpdate != nil {
+		return nil, utils.BuildInternalErrorResponse("failed to update user", errUpdate.Error())
 	}
 
 	return utils.BuildSuccessResponse(nil), nil

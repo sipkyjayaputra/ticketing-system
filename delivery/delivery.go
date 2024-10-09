@@ -39,6 +39,7 @@ type Delivery interface {
 
 	// FILE
 	FileServe(*gin.Context)
+	FileServeByPath(*gin.Context)
 	FileDownload(*gin.Context)
 }
 

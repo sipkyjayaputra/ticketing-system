@@ -19,6 +19,7 @@ type Repository interface {
 	UpdateUser(dto.User, string) error
 	DeleteUser(string) error
 	GetUserById(string) (*entity.User, error)
+	GetUserPassword(string) (string, error)
 	UpdateUserPassword(dto.UpdateUserPassword) error
 	UpdateUserPhoto(dto.UpdateUserPhoto) error
 

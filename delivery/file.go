@@ -44,6 +44,30 @@ func (del *delivery) FileServe(c *gin.Context) {
 	c.File(document.DocumentPath)
 }
 
+func (del *delivery) FileServeByPath(c *gin.Context) {
+	funcName := "FileServeByPath"
+	startTime := time.Now()
+	utils.LoggerProcess("info", fmt.Sprintf("Upper %s, [START]: Processing Request", funcName), del.logger)
+
+	documentPath := c.Query("path")
+
+	if documentPath == "" {
+		err := errors.New("invalid path")
+		utils.LoggerProcess("error", fmt.Sprintf("Process Failed %s", err.Error()), del.logger)
+		c.JSON(http.StatusBadRequest, err)
+	}
+	
+	if _, err := filepath.Abs(documentPath); err != nil {
+		err := errors.New("file not found")
+		utils.LoggerProcess("error", fmt.Sprintf("Process Failed %s", err.Error()), del.logger)
+		c.JSON(http.StatusNotFound, err)
+		return
+	}
+
+	utils.LoggerProcess("info", fmt.Sprintf("Lower %s, [END]: Elapsed Time %v", funcName, time.Since(startTime)), del.logger)
+	c.File(documentPath)
+}
+
 func (del *delivery) FileDownload(c *gin.Context) {
 	funcName := "FileDownload"
 	startTime := time.Now()

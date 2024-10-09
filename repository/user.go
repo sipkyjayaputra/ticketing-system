@@ -65,6 +65,14 @@ func (repo *repository) GetUserById(id string) (*entity.User, error) {
 	return user, nil
 }
 
+func (repo *repository) GetUserPassword(id string) (string, error) {
+	user := &entity.User{}
+	if err := repo.db.Model(&entity.User{}).Where("id = ?", id).First(&user).Error; err != nil {
+		return "", err
+	}
+	return user.Password, nil
+}
+
 func (repo *repository) UpdateUserPhoto(request dto.UpdateUserPhoto) error {
 	filePath := fmt.Sprintf("./uploads/photo/%s", request.Photo.Filename)
 

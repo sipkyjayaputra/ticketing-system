@@ -10,9 +10,9 @@ type User struct {
 	Username  string     `gorm:"column:username;unique" json:"username"`    // Username harus unik
 	Password  string     `gorm:"column:password" json:"password,omitempty"` // Password pengguna
 	Email     string     `gorm:"column:email;unique" json:"email"`          // Email pengguna, harus unik
-	Phone     string     `gorm:"column:phone;unique" json:"phone"`          // Email pengguna, harus unik
+	Phone     string     `gorm:"column:phone" json:"phone"`          // Email pengguna, harus unik
 	Team     string     `gorm:"column:team" json:"team"`          // Email pengguna, harus unik
-	Workpalce     string     `gorm:"column:workplace" json:"workplace"`          // Email pengguna, harus unik
+	Workpalce     string  `gorm:"column:workplace" json:"workplace"`          // Email pengguna, harus unik
 	Role      string     `gorm:"column:role" json:"role"`
 	Photo     string     `gorm:"column:photo;default:''" json:"photo"`
 	CreatedAt *time.Time `gorm:"autoCreateTime" json:"created_at,omitempty"`

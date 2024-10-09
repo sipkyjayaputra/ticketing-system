@@ -58,6 +58,7 @@ func InitRouter(db *gorm.DB, logger *logrus.Logger, cache *redis.Client) *gin.En
 
 		// FILES
 		router.GET("/file/serve/:id", del.FileServe)
+		router.GET("/file/serve", del.FileServeByPath)
 		router.GET("/file/download/:id", del.FileDownload)
 	}
 	// AUTH

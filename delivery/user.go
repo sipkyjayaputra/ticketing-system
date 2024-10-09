@@ -204,14 +204,7 @@ func (del *delivery) UpdateUserPassword(c *gin.Context) {
 	}
 
 	id := c.Param("id")
-	userID, errUserId := strconv.ParseInt(id, 10, 64)
-	if errUserId != nil {
-		utils.LoggerProcess("error",  errUserId.Error(), del.logger)
-		resp := utils.BuildBadRequestResponse("bad request", errUserId.Error())
-		c.JSON(resp.Response.StatusCode, resp)
-		return
-	}
-
+	
 	claimId, _ := c.Get("user_id")
 	claimRole, _ := c.Get("role")
 	if !strings.Contains(claimRole.(string), "admin") && claimId.(string) != id {
@@ -230,7 +223,7 @@ func (del *delivery) UpdateUserPassword(c *gin.Context) {
 		return
 	}
 
-	request.ID = uint(userID)
+	request.ID = id
 	res, err := del.uc.UpdateUserPassword(request)
 	if err != nil {
 		utils.LoggerProcess("error", fmt.Sprintf("Process Failed %s", err.Response.Errors), del.logger)
