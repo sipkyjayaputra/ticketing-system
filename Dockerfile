@@ -4,8 +4,7 @@ FROM golang:alpine AS builder
 WORKDIR /app
 
 COPY . .
-
-RUN go mod tidy && go build -o /app/binary
+RUN go mod tidy && go build -mod=mod -o /app/binary
 
 # Stage 2: Create a minimal runtime image
 FROM alpine:3.14

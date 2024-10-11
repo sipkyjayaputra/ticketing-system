@@ -11,7 +11,7 @@ const (
 )
 
 // ENVIRONMENT:
-const ENVIRONMENT string = LOCAL // LOCAL, DEVELOPMENT, PRODUCTION
+const ENVIRONMENT string = DEVELOPMENT // LOCAL, DEVELOPMENT, PRODUCTION
 
 var env = map[string]map[string]string{
 	"local": {
@@ -21,6 +21,11 @@ var env = map[string]map[string]string{
 		"MYSQL_USER":    "root",
 		"MYSQL_PASS":    "root",
 		"MYSQL_DB_NAME": "ticketing_system",
+		"POSTGRES_HOST":  "localhost",
+		"POSTGRES_PORT":  "5432",
+		"POSTGRES_USER":  "postgres",
+		"POSTGRES_PASS":  "admin",
+		"POSTGRES_DB_NAME": "ticketing_system",
 	},
 	"development": {
 		"PORT":          "8080",
@@ -29,6 +34,11 @@ var env = map[string]map[string]string{
 		"MYSQL_USER":    "root",
 		"MYSQL_PASS":    "root",
 		"MYSQL_DB_NAME": "ticketing_system",
+		"POSTGRES_HOST":  "postgres", 
+		"POSTGRES_PORT":  "5432",
+		"POSTGRES_USER":  "postgres",
+		"POSTGRES_PASS":  "admin",
+		"POSTGRES_DB_NAME": "ticketing_system",
 	},
 }
 

@@ -15,7 +15,7 @@ import (
 func main() {
 	configuration.InitConfig()
 
-	sqlConn, sqlDb, errSql := configuration.ConnectMySQL()
+	sqlConn, sqlDb, errSql := configuration.ConnectPostgres()
 	if errSql != nil {
 		log.Println("Error: PosgreSQL connection failed. ", errSql)
 	}

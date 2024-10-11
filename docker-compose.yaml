@@ -1,33 +1,29 @@
 version: "3.8"
 
 services:
-  mysql:
-    image: mysql:latest
-    container_name: mysql_container
+  postgres:
+    image: postgres:latest
+    container_name: postgres_container
     environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: ticketing_system
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: ticketing_system
     ports:
-      - "3306:3306"
+      - "5432:5432"
     volumes:
-      - mysql_data:/var/lib/mysql
+      - postgres_data:/var/lib/postgresql/data
 
   api:
     image: vitkynanda/sv-ticket-service
     container_name: api_container
-    environment:
-      MYSQL_HOST: mysql
-      MYSQL_USER: root
-      MYSQL_PASSWORD: root
-      MYSQL_PORT: "3306"
-      MYSQL_DB_NAME: ticketing_system
     ports:
       - "8080:8080"
     depends_on:
-      - mysql
+      - postgres
     restart: always
     volumes:
       - ./uploads:/uploads
+      - ./logs:/logs
 
   app:
     image: vitkynanda/sv-ticket-app
@@ -41,4 +37,4 @@ services:
     restart: always
 
 volumes:
-  mysql_data:
+  postgres_data:
