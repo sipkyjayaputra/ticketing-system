@@ -13,7 +13,7 @@ import (
 var (
 	AuthSigningKey    = []byte(configuration.CONFIG["JWT_SECRET"])
 	AuthSigningMethod = jwt.SigningMethodHS256
-	AuthIssuer        = "LOGISTIC DEV"
+	AuthIssuer        = "SHARING VISION JAKARTA"
 )
 
 type Claims struct {

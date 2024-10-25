@@ -10,6 +10,7 @@ import (
 
 	"github.com/sipkyjayaputra/ticketing-system/app"
 	"github.com/sipkyjayaputra/ticketing-system/configuration"
+	"github.com/sipkyjayaputra/ticketing-system/helpers"
 )
 
 func main() {
@@ -34,7 +35,10 @@ func main() {
 	defer cache.Close()
 
 	log.Println("Routes Initialized")
-	router := app.InitRouter(sqlConn, logger, cache)
+
+	hrsvClient := helpers.NewHrsvClient(configuration.CONFIG["HRSV_HOST"], configuration.CONFIG["HRSV_EMAIL"], configuration.CONFIG["HRSV_PASSWORD"])
+	
+	router := app.InitRouter(sqlConn, logger, cache, hrsvClient)
 
 	port := configuration.Getenv("PORT", "8080")
 	srv := &http.Server{

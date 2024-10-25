@@ -1,6 +1,7 @@
 package delivery
 
 import (
+	"github.com/sipkyjayaputra/ticketing-system/helpers"
 	"github.com/sipkyjayaputra/ticketing-system/usecase"
 
 	"github.com/gin-gonic/gin"
@@ -41,16 +42,24 @@ type Delivery interface {
 	FileServe(*gin.Context)
 	FileServeByPath(*gin.Context)
 	FileDownload(*gin.Context)
+
+	// HRSV
+	GetHrsvUsers(*gin.Context)
+	GetHrsvRoles(*gin.Context)
+	SyncUserDataHrsv(*gin.Context)
+	SyncPasswordHrsv(*gin.Context)
 }
 
 type delivery struct {
 	uc     usecase.Usecase
 	logger *logrus.Logger
+	hrsvClient *helpers.HrsvClient
 }
 
-func NewDelivery(uc usecase.Usecase, logger *logrus.Logger) Delivery {
+func NewDelivery(uc usecase.Usecase, logger *logrus.Logger, hrsvClient *helpers.HrsvClient) Delivery {
 	return &delivery{
 		uc:     uc,
 		logger: logger,
+		hrsvClient: hrsvClient,
 	}
 }

@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"strconv"
@@ -44,8 +45,8 @@ func (repo *repository) GetTickets(filter dto.TicketFilter) ([]entity.Ticket, er
 		query = query.Where("subject LIKE ?", "%"+filter.Terms+"%")
 	}
 
-	if filter.ReporterID != "" {
-		query = query.Where("reporter_id = ?", filter.ReporterID)
+	if filter.AssignedID != "" {
+		query = query.Where("assigned_id = ?", filter.AssignedID)
 	}
 
 	// Handle pagination (limit and offset)
@@ -84,7 +85,7 @@ func (repo *repository) GetTickets(filter dto.TicketFilter) ([]entity.Ticket, er
 	return tickets, nil
 }
 
-func (repo *repository) GetTicketSummary() (*entity.TicketSummary, error) {
+func (repo *repository) GetTicketSummary(ticket dto.TicketSummaryFilter) (*entity.TicketSummary, error) {
 	ticketSummary := entity.TicketSummary{}
 	now := time.Now()
 	currentMonth := now.Month()
@@ -99,79 +100,57 @@ func (repo *repository) GetTicketSummary() (*entity.TicketSummary, error) {
 	}
 
 	var (
-		newTicketCount, openTicketCount, pendingTicketCount, closedTicketCount                                     int
-		lastMonthNewTicketCount, lastMonthOpenTicketCount, lastMonthPendingTicketCount, lastMonthClosedTicketCount int
+		newTicketCount, openTicketCount, inProgressTicketCount, closedTicketCount                                     int
+		lastMonthNewTicketCount, lastMonthOpenTicketCount, lastMonthInProgressTicketCount, lastMonthClosedTicketCount int
 	)
 
+	// Function to build the query with or without assigned_id
+	buildQuery := func(status string, month time.Month, year int) *gorm.DB {
+		query := repo.db.Model(&entity.Ticket{}).
+			Where("EXTRACT(MONTH FROM created_at) = ?", int(month)).
+			Where("EXTRACT(YEAR FROM created_at) = ?", year)
+
+		if ticket.Role != "admin" && ticket.Role != "management" {
+			query = query.Where("assigned_id = ?", ticket.ID)
+		}
+		if status != "" {
+			query = query.Where("UPPER(status) = ?", status)
+		}
+
+		return query
+	}
+
 	// Query for the current month
-	if err := repo.db.Model(&entity.Ticket{}).
-		Select("COUNT(*) AS new_ticket_count").
-		Where("EXTRACT(MONTH FROM created_at) = ?", currentMonth).
-		Where("EXTRACT(YEAR FROM created_at) = ?", currentYear).
-		Scan(&newTicketCount).Error; err != nil {
+	if err := buildQuery("", currentMonth, currentYear).Select("COUNT(*) AS new_ticket_count").Scan(&newTicketCount).Error; err != nil {
 		return nil, err
 	}
 
-	if err := repo.db.Model(&entity.Ticket{}).
-		Select("COUNT(*) AS open_ticket_count").
-		Where("UPPER(status) = ?", "OPEN").
-		Where("EXTRACT(MONTH FROM created_at) = ?", currentMonth).
-		Where("EXTRACT(YEAR FROM created_at) = ?", currentYear).
-		Scan(&openTicketCount).Error; err != nil {
+	if err := buildQuery("OPEN", currentMonth, currentYear).Select("COUNT(*) AS open_ticket_count").Scan(&openTicketCount).Error; err != nil {
 		return nil, err
 	}
 
-	if err := repo.db.Model(&entity.Ticket{}).
-		Select("COUNT(*) AS pending_ticket_count").
-		Where("UPPER(status) = ?", "PENDING").
-		Where("EXTRACT(MONTH FROM created_at) = ?", currentMonth).
-		Where("EXTRACT(YEAR FROM created_at) = ?", currentYear).
-		Scan(&pendingTicketCount).Error; err != nil {
+	if err := buildQuery("IN PROGRESS", currentMonth, currentYear).Select("COUNT(*) AS in_progress_ticket_count").Scan(&inProgressTicketCount).Error; err != nil {
 		return nil, err
 	}
 
-	if err := repo.db.Model(&entity.Ticket{}).
-		Select("COUNT(*) AS closed_ticket_count").
-		Where("UPPER(status) = ?", "CLOSED").
-		Where("EXTRACT(MONTH FROM created_at) = ?", currentMonth).
-		Where("EXTRACT(YEAR FROM created_at) = ?", currentYear).
-		Scan(&closedTicketCount).Error; err != nil {
+	if err := buildQuery("CLOSED", currentMonth, currentYear).Select("COUNT(*) AS closed_ticket_count").Scan(&closedTicketCount).Error; err != nil {
 		return nil, err
 	}
 
 	// Query for the last month
-	if err := repo.db.Model(&entity.Ticket{}).
-		Select("COUNT(*) AS new_ticket_count").
-		Where("EXTRACT(MONTH FROM created_at) = ?", lastMonth).
-		Where("EXTRACT(YEAR FROM created_at) = ?", lastYear).
-		Scan(&lastMonthNewTicketCount).Error; err != nil {
+	if err := buildQuery("", lastMonth, lastYear).Select("COUNT(*) AS new_ticket_count").Scan(&lastMonthNewTicketCount).Error; err != nil {
 		return nil, err
 	}
 
-	if err := repo.db.Model(&entity.Ticket{}).
-		Select("COUNT(*) AS open_ticket_count").
-		Where("UPPER(status) = ?", "OPEN").
-		Where("EXTRACT(MONTH FROM created_at) = ?", lastMonth).
-		Where("EXTRACT(YEAR FROM created_at) = ?", lastYear).
-		Scan(&lastMonthOpenTicketCount).Error; err != nil {
+	if err := buildQuery("OPEN", lastMonth, lastYear).Select("COUNT(*) AS open_ticket_count").Scan(&lastMonthOpenTicketCount).Error; err != nil {
 		return nil, err
 	}
 
-	if err := repo.db.Model(&entity.Ticket{}).
-		Select("COUNT(*) AS pending_ticket_count").
-		Where("UPPER(status) = ?", "PENDING").
-		Where("EXTRACT(MONTH FROM created_at) = ?", lastMonth).
-		Where("EXTRACT(YEAR FROM created_at) = ?", lastYear).
-		Scan(&lastMonthPendingTicketCount).Error; err != nil {
+	if err := buildQuery("IN PROGRESS", lastMonth, lastYear).Select("COUNT(*) AS in_progress_ticket_count").Scan(&lastMonthInProgressTicketCount).Error; err != nil {
 		return nil, err
 	}
 
-	if err := repo.db.Model(&entity.Ticket{}).
-		Select("COUNT(*) AS closed_ticket_count").
-		Where("UPPER(status) = ?", "CLOSED").
-		Where("EXTRACT(MONTH FROM created_at) = ?", lastMonth).
-		Where("EXTRACT(YEAR FROM created_at) = ?", lastYear).
-		Scan(&lastMonthClosedTicketCount).Error; err != nil {
+	if err := buildQuery("CLOSED", lastMonth, lastYear).Select("COUNT(*) AS closed_ticket_count").Scan(&lastMonthClosedTicketCount).Error; err != nil {
 		return nil, err
 	}
 
@@ -184,9 +163,9 @@ func (repo *repository) GetTicketSummary() (*entity.TicketSummary, error) {
 	ticketSummary.OpenTicketCountLastMonth = getTicketCountLastMonth(openTicketCount, lastMonthOpenTicketCount)
 	ticketSummary.OpenTicketNote = getTicketNote(openTicketCount, lastMonthOpenTicketCount)
 
-	ticketSummary.PendingTicketCount = pendingTicketCount
-	ticketSummary.PendingTicketCountLastMonth = getTicketCountLastMonth(pendingTicketCount, lastMonthPendingTicketCount)
-	ticketSummary.PendingTicketNote = getTicketNote(pendingTicketCount, lastMonthPendingTicketCount)
+	ticketSummary.InProgressTicketCount = inProgressTicketCount
+	ticketSummary.InProgressTicketCountLastMonth = getTicketCountLastMonth(inProgressTicketCount, lastMonthInProgressTicketCount)
+	ticketSummary.InProgressTicketNote = getTicketNote(inProgressTicketCount, lastMonthInProgressTicketCount)
 
 	ticketSummary.ClosedTicketCount = closedTicketCount
 	ticketSummary.ClosedTicketCountLastMonth = getTicketCountLastMonth(closedTicketCount, lastMonthClosedTicketCount)
@@ -194,118 +173,6 @@ func (repo *repository) GetTicketSummary() (*entity.TicketSummary, error) {
 
 	return &ticketSummary, nil
 }
-
-// // GetTicketSummary retrieves all tickets from the database
-// func (repo *repository) GetTicketSummary() (*entity.TicketSummary, error) {
-// 	ticketSummary := entity.TicketSummary{}
-// 	now := time.Now()
-// 	currentMonth := now.Month()
-// 	currentYear := now.Year()
-
-// 	// Adjust last month and year
-// 	lastMonth := currentMonth - 1
-// 	lastYear := currentYear
-// 	if lastMonth == 0 { // If the current month is January
-// 		lastMonth = 12 // December
-// 		lastYear--     // Move to last year
-// 	}
-
-// 	var (
-// 		newTicketCount, openTicketCount, pendingTicketCount, closedTicketCount                                     int
-// 		lastMonthNewTicketCount, lastMonthOpenTicketCount, lastMonthPendingTicketCount, lastMonthClosedTicketCount int
-// 	)
-
-// 	// Query for the current month
-// 	if err := repo.db.Model(&entity.Ticket{}).
-// 		Select("COUNT(*) AS new_ticket_count").
-// 		Where("MONTH(created_at) = ?", currentMonth).
-// 		Where("YEAR(created_at) = ?", currentYear).
-// 		Scan(&newTicketCount).Error; err != nil {
-// 		return nil, err
-// 	}
-
-// 	if err := repo.db.Model(&entity.Ticket{}).
-// 		Select("COUNT(*) AS open_ticket_count").
-// 		Where("UPPER(status) = ?", "OPEN").
-// 		Where("MONTH(created_at) = ?", currentMonth).
-// 		Where("YEAR(created_at) = ?", currentYear).
-// 		Scan(&openTicketCount).Error; err != nil {
-// 		return nil, err
-// 	}
-
-// 	if err := repo.db.Model(&entity.Ticket{}).
-// 		Select("COUNT(*) AS pending_ticket_count").
-// 		Where("UPPER(status) = ?", "PENDING").
-// 		Where("MONTH(created_at) = ?", currentMonth).
-// 		Where("YEAR(created_at) = ?", currentYear).
-// 		Scan(&pendingTicketCount).Error; err != nil {
-// 		return nil, err
-// 	}
-
-// 	if err := repo.db.Model(&entity.Ticket{}).
-// 		Select("COUNT(*) AS closed_ticket_count").
-// 		Where("UPPER(status) = ?", "CLOSED").
-// 		Where("MONTH(created_at) = ?", currentMonth).
-// 		Where("YEAR(created_at) = ?", currentYear).
-// 		Scan(&closedTicketCount).Error; err != nil {
-// 		return nil, err
-// 	}
-
-// 	// Query for the last month
-// 	if err := repo.db.Model(&entity.Ticket{}).
-// 		Select("COUNT(*) AS new_ticket_count").
-// 		Where("MONTH(created_at) = ?", lastMonth).
-// 		Where("YEAR(created_at) = ?", lastYear).
-// 		Scan(&lastMonthNewTicketCount).Error; err != nil {
-// 		return nil, err
-// 	}
-
-// 	if err := repo.db.Model(&entity.Ticket{}).
-// 		Select("COUNT(*) AS open_ticket_count").
-// 		Where("UPPER(status) = ?", "OPEN").
-// 		Where("MONTH(created_at) = ?", lastMonth).
-// 		Where("YEAR(created_at) = ?", lastYear).
-// 		Scan(&lastMonthOpenTicketCount).Error; err != nil {
-// 		return nil, err
-// 	}
-
-// 	if err := repo.db.Model(&entity.Ticket{}).
-// 		Select("COUNT(*) AS pending_ticket_count").
-// 		Where("UPPER(status) = ?", "PENDING").
-// 		Where("MONTH(created_at) = ?", lastMonth).
-// 		Where("YEAR(created_at) = ?", lastYear).
-// 		Scan(&lastMonthPendingTicketCount).Error; err != nil {
-// 		return nil, err
-// 	}
-
-// 	if err := repo.db.Model(&entity.Ticket{}).
-// 		Select("COUNT(*) AS closed_ticket_count").
-// 		Where("UPPER(status) = ?", "CLOSED").
-// 		Where("MONTH(created_at) = ?", lastMonth).
-// 		Where("YEAR(created_at) = ?", lastYear).
-// 		Scan(&lastMonthClosedTicketCount).Error; err != nil {
-// 		return nil, err
-// 	}
-
-// 	// Calculate notes
-// 	ticketSummary.NewTicketCount = newTicketCount
-// 	ticketSummary.NewTicketCountLastMonth = getTicketCountLastMonth(newTicketCount, lastMonthNewTicketCount)
-// 	ticketSummary.NewTicketNote = getTicketNote(newTicketCount, lastMonthNewTicketCount)
-
-// 	ticketSummary.OpenTicketCount = openTicketCount
-// 	ticketSummary.OpenTicketCountLastMonth = getTicketCountLastMonth(openTicketCount, lastMonthOpenTicketCount)
-// 	ticketSummary.OpenTicketNote = getTicketNote(openTicketCount, lastMonthOpenTicketCount)
-
-// 	ticketSummary.PendingTicketCount = pendingTicketCount
-// 	ticketSummary.PendingTicketCountLastMonth = getTicketCountLastMonth(pendingTicketCount, lastMonthPendingTicketCount)
-// 	ticketSummary.PendingTicketNote = getTicketNote(pendingTicketCount, lastMonthPendingTicketCount)
-
-// 	ticketSummary.ClosedTicketCount = closedTicketCount
-// 	ticketSummary.ClosedTicketCountLastMonth = getTicketCountLastMonth(closedTicketCount, lastMonthClosedTicketCount)
-// 	ticketSummary.ClosedTicketNote = getTicketNote(closedTicketCount, lastMonthClosedTicketCount)
-
-// 	return &ticketSummary, nil
-// }
 
 // Helper function to generate the note
 func getTicketNote(currentCount, lastMonthCount int) string {
@@ -381,9 +248,24 @@ func (repo *repository) AddTicket(ticket dto.Ticket) error {
                     return err
                 }
 
+                var documentNo string
+
+				var payload map[string]interface{}
+                if err := json.Unmarshal(newTicket.Content, &payload); err == nil {
+                    if originalPayload, ok := payload["original_payload"].(map[string]interface{}); ok {
+                        if docNo, exists := originalPayload["document_no"].(string); exists {
+                            documentNo = docNo
+                        }
+                    }
+                }
+
+                if documentNo == "" {
+                    documentNo = utils.GenerateDocNumber(uint(newID), ticket.TicketType, index+1)
+                }
+
                 newDoc := entity.Document{
                     DocumentName: doc.DocumentFile.Filename,
-                    DocumentNo:   utils.GenerateDocNumber(uint(newID), ticket.TicketType, index+1),
+                    DocumentNo:   documentNo,
                     DocumentSize: doc.DocumentFile.Size,
                     DocumentType: doc.DocumentType,
                     DocumentPath: filePath,
@@ -394,9 +276,11 @@ func (repo *repository) AddTicket(ticket dto.Ticket) error {
             }
         }
 
-        // Bulk insert activities and documents
-        if err := tx.Create(&activitiesToInsert).Error; err != nil {
-            return err
+        // Bulk insert activities
+        if len(activitiesToInsert) > 0 {
+            if err := tx.Create(&activitiesToInsert).Error; err != nil {
+                return err
+            }
         }
 
         // Associate documents with activities
@@ -406,38 +290,104 @@ func (repo *repository) AddTicket(ticket dto.Ticket) error {
             }
         }
 
-		if len(documentsToInsert) > 0 {
-			if err := tx.Create(&documentsToInsert).Error; err != nil {
-				return err
-			}
-		}
-        
+        // Bulk insert documents
+        if len(documentsToInsert) > 0 {
+            if err := tx.Create(&documentsToInsert).Error; err != nil {
+                return err
+            }
+        }
 
         return nil
     })
 }
 
 // UpdateTicket updates an existing ticket in the database
-func (repo *repository) UpdateTicket(ticket dto.Ticket) error {
-	updateTicket := &entity.Ticket{
-		TicketNo:   ticket.TicketNo,
-		TicketType: ticket.TicketType,
-		Subject:    ticket.Subject,
-		ReportDate: ticket.ReportDate,
-		AssignedID: ticket.AssignedID,
-		Priority:   ticket.Priority,
-		Status:     ticket.Status,
-		Content:    ticket.Content,
-		CreatedBy:  ticket.CreatedBy,
-		UpdatedBy:  ticket.UpdatedBy,
-		CreatedAt:  ticket.CreatedAt,
-		UpdatedAt:  ticket.UpdatedAt,
-	}
+// func (repo *repository) UpdateTicket(ticket dto.Ticket) error {
+// 	updateTicket := &entity.Ticket{
+// 		TicketNo:   ticket.TicketNo,
+// 		TicketType: ticket.TicketType,
+// 		Subject:    ticket.Subject,
+// 		ReportDate: ticket.ReportDate,
+// 		AssignedID: ticket.AssignedID,
+// 		Priority:   ticket.Priority,
+// 		Status:     ticket.Status,
+// 		Content:    ticket.Content,
+// 		CreatedBy:  ticket.CreatedBy,
+// 		UpdatedBy:  ticket.UpdatedBy,
+// 		CreatedAt:  ticket.CreatedAt,
+// 		UpdatedAt:  ticket.UpdatedAt,
+// 	}
 
-	if err := repo.db.Model(&entity.Ticket{}).Where("ticket_id = ?", ticket.TicketID).Updates(&updateTicket).Error; err != nil {
-		return err
-	}
-	return nil
+// 	if err := repo.db.Model(&entity.Ticket{}).Where("ticket_id = ?", ticket.TicketID).Updates(&updateTicket).Error; err != nil {
+// 		return err
+// 	}
+// 	return nil
+// }
+func (repo *repository) UpdateTicket(updatedTicket dto.Ticket) error {
+    return repo.db.Transaction(func(tx *gorm.DB) error {
+        // Ambil tiket yang ingin diperbarui
+        var existingTicket entity.Ticket
+        if err := tx.First(&existingTicket, updatedTicket.TicketID).Error; err != nil {
+            return err // Rollback jika tiket tidak ditemukan
+        }
+
+        // Update informasi tiket
+        existingTicket.Subject = updatedTicket.Subject
+        existingTicket.AssignedID = updatedTicket.AssignedID
+        existingTicket.Priority = updatedTicket.Priority
+        existingTicket.Status = updatedTicket.Status
+        existingTicket.Content = updatedTicket.Content
+        existingTicket.UpdatedBy = updatedTicket.UpdatedBy
+
+        // Simpan perubahan tiket
+        if err := tx.Save(&existingTicket).Error; err != nil {
+            return err
+        }
+
+        // Ambil aktivitas pertama untuk mengupdate dokumen
+        var activity entity.Activity
+        if err := tx.Where("ticket_id = ?", updatedTicket.TicketID).First(&activity).Error; err != nil {
+            return err // Rollback jika aktivitas tidak ditemukan
+        }
+
+        // Hapus dokumen yang ada
+        if err := tx.Where("activity_id = ?", activity.ActivityID).Delete(&entity.Document{}).Error; err != nil {
+            return err
+        }
+
+        // Menyimpan dokumen baru
+        documentsToInsert := []entity.Document{}
+        for index, doc := range updatedTicket.Activities[0].Documents {
+            filePath := fmt.Sprintf("./uploads/%s/%s", updatedTicket.TicketType, doc.DocumentFile.Filename)
+
+            if err := helpers.SaveUploadedFile(doc.DocumentFile, filePath); err != nil {
+                return err
+            }
+
+            documentNo := utils.GenerateDocNumber(uint(updatedTicket.TicketID), updatedTicket.TicketType, index+1)
+
+            newDoc := entity.Document{
+                DocumentName: doc.DocumentFile.Filename,
+                DocumentNo:   documentNo,
+                DocumentSize: doc.DocumentFile.Size,
+                DocumentType: doc.DocumentType,
+                DocumentPath: filePath,
+                CreatedBy:    updatedTicket.CreatedBy,
+                UpdatedBy:    updatedTicket.UpdatedBy,
+                ActivityID:   activity.ActivityID, // Kaitkan dokumen dengan aktivitas
+            }
+            documentsToInsert = append(documentsToInsert, newDoc)
+        }
+
+        // Bulk insert dokumen baru
+        if len(documentsToInsert) > 0 {
+            if err := tx.Create(&documentsToInsert).Error; err != nil {
+                return err
+            }
+        }
+
+        return nil
+    })
 }
 
 func (repo *repository) CloseTicket(ticket dto.Ticket) error {
@@ -479,8 +429,6 @@ func (repo *repository) GetTicketById(id string) (*entity.Ticket, error) {
 	}
 	return ticket, nil
 }
-
-
 
 // Helper function to get the next ticket ID
 func getNextTicketID(ticketNo string) int64 {

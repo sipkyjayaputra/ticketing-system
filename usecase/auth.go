@@ -57,8 +57,16 @@ func (uc *usecase) handleDefaultSignIn(password string, user entity.User) (*util
 		return nil, utils.BuildUnauthorizedResponse("invalid email", "user not found")
 	}
 
+	if user.Password == "" {
+		return nil, utils.BuildUnauthorizedResponse("password not synced", "user not synced")
+	}
+
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
 		return nil, utils.BuildUnauthorizedResponse("invalid password", err.Error())
+	}
+
+	if user.Role == "" || user.Role == "user" {
+		return nil, utils.BuildUnauthorizedResponse("invalid access", "user not allowed to access this application")
 	}
 
 	return uc.generateTokens(user)

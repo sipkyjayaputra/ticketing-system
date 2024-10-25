@@ -30,17 +30,20 @@ type Repository interface {
 	CloseTicket(dto.Ticket) error
 	DeleteTicket(string) error
 	GetTicketById(string) (*entity.Ticket, error)
-	GetTicketSummary() (*entity.TicketSummary, error)
+	GetTicketSummary(dto.TicketSummaryFilter) (*entity.TicketSummary, error)
 
 	// ACTIVITY
-	GetActivitiesByTicketNo(ticketNo string) ([]entity.Activity, error)
-	AddActivity(activity dto.Activity) error
-	UpdateActivity(activity dto.Activity) error
-	DeleteActivity(activityID uint) error
-	GetActivityById(activityID uint) (*entity.Activity, error)
+	GetActivitiesByTicketNo(string) ([]entity.Activity, error)
+	AddActivity(dto.Activity) error
+	UpdateActivity(dto.Activity) error
+	DeleteActivity(uint) error
+	GetActivityById(uint) (*entity.Activity, error)
 
 	// DOCUMENT
-	GetDocumentById(documentID uint) (*entity.Document, error)
+	GetDocumentById(uint) (*entity.Document, error)
+
+	// HRSV
+	SyncUserDataHrsv([]dto.UserDataHRSV) error
 }
 
 type repository struct {

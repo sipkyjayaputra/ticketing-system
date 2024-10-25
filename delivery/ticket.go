@@ -11,7 +11,6 @@ import (
 	"github.com/sipkyjayaputra/ticketing-system/utils"
 
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 )
 
 func (del *delivery) GetTickets(c *gin.Context) {
@@ -34,16 +33,16 @@ func (del *delivery) GetTickets(c *gin.Context) {
     role, _ := c.Get("role")
 
     // Convert userID to string if it's of type uint
-    reporterIDStr := c.Query("reporter_id")
-    if reporterIDStr != "" {
-        ticketFilter.ReporterID = reporterIDStr
+    assignedIdStr := c.Query("assigned_id")
+    if assignedIdStr != "" {
+        ticketFilter.AssignedID = assignedIdStr
     } else {
         // Ensure userID is converted to string correctly
-        ticketFilter.ReporterID = fmt.Sprintf("%v", userID)
+        ticketFilter.AssignedID = fmt.Sprintf("%v", userID)
     }
 
-    if role == "admin" {
-        ticketFilter.ReporterID = ""
+    if role == "admin" || role == "management" {
+        ticketFilter.AssignedID = ""
     } 
 
     res, err := del.uc.GetTickets(ticketFilter)
@@ -63,8 +62,22 @@ func (del *delivery) GetTicketSummary(c *gin.Context) {
 	startTime := time.Now()
 	utils.LoggerProcess("info", fmt.Sprintf("Upper %s, [START]: Processing Request", funcName), del.logger)
 
-	res, err := del.uc.GetTicketSummary()
+	userID, userExists := c.Get("user_id")
+	role, roleExists := c.Get("role")
 
+	if !userExists || !roleExists {
+		utils.LoggerProcess("error", "Missing user_id or role in context", del.logger)
+		resp := utils.BuildBadRequestResponse("bad request", "missing user_id or role in context")
+		c.JSON(resp.Response.StatusCode, resp)
+		return
+	}
+
+	filter := dto.TicketSummaryFilter{
+		ID:   userID.(uint),
+		Role: role.(string),
+	}
+
+	res, err := del.uc.GetTicketSummary(filter)
 	if err != nil {
 		utils.LoggerProcess("error", fmt.Sprintf("Process Failed %s", err.Response.Errors), del.logger)
 		c.JSON(err.Response.StatusCode, err)
@@ -74,6 +87,7 @@ func (del *delivery) GetTicketSummary(c *gin.Context) {
 	utils.LoggerProcess("info", fmt.Sprintf("Lower %s, [END]: Elapsed Time %v", funcName, time.Since(startTime)), del.logger)
 	c.JSON(res.Response.StatusCode, res)
 }
+
 
 func (del *delivery) AddTicket(c *gin.Context) {
 	funcName := "AddTicket"
@@ -88,13 +102,11 @@ func (del *delivery) AddTicket(c *gin.Context) {
 		return
 	}
 
-	id := uuid.New()
 	formValue := form.Value
 	reporterID, _ := strconv.ParseInt(formValue["reporter_id"][0], 10, 64)
 	reportDate, _ := time.Parse(cs.DATE_TIME_LAYOUT, formValue["report_date"][0])
 	assignedID, _ := strconv.ParseInt(formValue["assigned_id"][0], 10, 64)
 	request := dto.Ticket{
-		TicketNo:   id.String(),
 		ReporterID: uint(reporterID),
 		TicketType: formValue["ticket_type"][0],
 		Subject:    formValue["subject"][0],
@@ -140,7 +152,7 @@ func (del *delivery) UpdateTicket(c *gin.Context) {
 
 	form, errForm := c.MultipartForm()
 	if errForm != nil {
-		utils.LoggerProcess("error",errForm.Error(), del.logger)
+		utils.LoggerProcess("error", errForm.Error(), del.logger)
 		resp := utils.BuildBadRequestResponse("bad request", errForm.Error())
 		c.JSON(resp.Response.StatusCode, resp)
 		return
@@ -148,23 +160,46 @@ func (del *delivery) UpdateTicket(c *gin.Context) {
 
 	formValue := form.Value
 	reporterID, _ := strconv.ParseInt(formValue["reporter_id"][0], 10, 64)
-	reportDate, _ := time.Parse(cs.DATE_TIME_LAYOUT, formValue["report_date"][0])
 	assignedID, _ := strconv.ParseInt(formValue["assigned_id"][0], 10, 64)
 	request := dto.Ticket{
 		ReporterID: uint(reporterID),
 		TicketType: formValue["ticket_type"][0],
 		Subject:    formValue["subject"][0],
-		ReportDate: reportDate,
 		AssignedID: uint(assignedID),
 		Priority:   formValue["priority"][0],
 		Status:     formValue["status"][0],
 		Content:    json.RawMessage(formValue["content"][0]),
 	}
 
-	updater, _ := c.Get("user_id")
-	ticketNo := c.Param("id")
-	res, err := del.uc.UpdateTicket(request, updater.(uint), ticketNo)
+	documents := []dto.Document{}
+	for key, val := range form.File {
+		for _, f := range val {
+			documents = append(documents, dto.Document{
+				DocumentType: key,
+				DocumentFile: f,
+			})
+		}
+	}
 
+	newActivity := dto.Activity{
+		Documents: documents,
+	}
+	request.Activities = []dto.Activity{newActivity}
+
+	updater, _ := c.Get("user_id")
+	ticketID := c.Param("id")
+
+	id, errParse := strconv.ParseUint(ticketID, 10, 64)
+	if errParse != nil { // Fixed missing 'if' keyword
+		utils.LoggerProcess("error", errParse.Error(), del.logger)
+		resp := utils.BuildBadRequestResponse("bad request", errParse.Error())
+		c.JSON(resp.Response.StatusCode, resp)
+		return
+	}
+
+	request.TicketID = uint(id)
+
+	res, err := del.uc.UpdateTicket(request, updater.(uint))
 	if err != nil {
 		utils.LoggerProcess("error", fmt.Sprintf("Process Failed %s", err.Response.Errors), del.logger)
 		c.JSON(err.Response.StatusCode, err)

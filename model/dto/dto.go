@@ -55,7 +55,7 @@ type TicketFilter struct {
 	Terms           string `json:"terms"`
 	Limit           string `json:"limit"`
 	Offset          string `json:"offset"`
-	ReporterID 		string `json:"reporter_id"`
+	AssignedID 		string `json:"assigned_id"`
 }
 
 type Ticket struct {
@@ -89,6 +89,7 @@ type Activity struct {
 
 type Document struct {
 	DocumentID   uint                  `json:"document_id"`
+	DocumentNo   string                `json:"document_no"`
 	DocumentName string                `json:"document_name"`
 	DocumentSize int64                 `json:"document_size"`
 	DocumentPath string                `json:"document_path"`
@@ -98,4 +99,62 @@ type Document struct {
 	UpdatedBy    uint                  `json:"updated_by,omitempty"` // ID of the last updater
 	CreatedAt    time.Time             `json:"created_at"`           // Document creation timestamp
 	UpdatedAt    time.Time             `json:"updated_at"`           // Document update timestamp
+}
+
+
+type Response struct {
+    StatusCode      int         `json:"status_code"`
+    Success         bool        `json:"success"`
+    ResponseMessage string      `json:"response_message"`
+    Errors          interface{} `json:"errors"` // Use interface{} if errors can be null or an object
+    Data            []map[string]interface{}  `json:"data"`
+}
+
+// UserData struct to hold user details
+type UserDataHRSV struct {
+    ID           string       `json:"_id"`
+    CompanyRole  CompanyRole  `json:"company_role"`
+    CreatedAt    time.Time    `json:"created_at"`
+    Email        string       `json:"email"`
+    FID          string       `json:"fid"`
+    IsActive     bool         `json:"is_active"`
+    IsSynced     bool         `json:"is_synced"`
+    IsVerified    bool        `json:"is_verified"`
+    Name         string       `json:"name"`
+    ProfileDesc  string       `json:"profile_desc"`
+    SystemRole   string       `json:"system_role"`
+    Team         Team         `json:"team"`
+    UpdatedAt    time.Time    `json:"updated_at"`
+    Workplace    Workplace    `json:"workplace"`
+}
+
+// CompanyRole struct to hold company role details
+type CompanyRole struct {
+    FID  string `json:"fid"`
+    Name string `json:"name"`
+}
+
+// Team struct to hold team details
+type Team struct {
+    FID  string `json:"fid"`
+    Name string `json:"name"`
+}
+
+// Workplace struct to hold workplace details
+type Workplace struct {
+    FID     string    `json:"fid"`
+    Location Location  `json:"location"`
+    Name    string     `json:"name"`
+    Radius  int       `json:"radius"`
+}
+
+// Location struct to hold location details
+type Location struct {
+    Lat float64 `json:"lat"`
+    Lng float64 `json:"lng"`
+}
+
+type TicketSummaryFilter struct {
+	ID uint `json:"id"`
+	Role string `json:"role"`
 }

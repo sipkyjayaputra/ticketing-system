@@ -26,6 +26,10 @@ var env = map[string]map[string]string{
 		"POSTGRES_USER":  "postgres",
 		"POSTGRES_PASS":  "admin",
 		"POSTGRES_DB_NAME": "ticketing_system",
+		"JWT_SECRET" : "secret",
+		"HRSV_EMAIL" : "vitkynptr@gmail.com",
+		"HRSV_PASSWORD" : "Test@1234",
+		"HRSV_HOST" : "timesheet.sharingvisionjakarta.com",
 	},
 	"development": {
 		"PORT":          "8080",
@@ -39,6 +43,10 @@ var env = map[string]map[string]string{
 		"POSTGRES_USER":  "postgres",
 		"POSTGRES_PASS":  "admin",
 		"POSTGRES_DB_NAME": "ticketing_system",
+		"JWT_SECRET" : "secret",
+		"HRSV_EMAIL" : "vitkynptr@gmail.com",
+		"HRSV_PASSWORD" : "Test@1234",
+		"HRSV_HOST" : "timesheet.sharingvisionjakarta.com",
 	},
 }
 

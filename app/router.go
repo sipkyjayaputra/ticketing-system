@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/sipkyjayaputra/ticketing-system/delivery"
+	"github.com/sipkyjayaputra/ticketing-system/helpers"
 	"github.com/sipkyjayaputra/ticketing-system/middleware"
 	"github.com/sipkyjayaputra/ticketing-system/repository"
 	"github.com/sipkyjayaputra/ticketing-system/usecase"
@@ -16,10 +17,10 @@ import (
 	"gorm.io/gorm"
 )
 
-func InitRouter(db *gorm.DB, logger *logrus.Logger, cache *redis.Client) *gin.Engine {
+func InitRouter(db *gorm.DB, logger *logrus.Logger, cache *redis.Client, hrsvClient *helpers.HrsvClient) *gin.Engine {
 	repo := repository.NewRepository(db, logger, cache)
 	uc := usecase.NewUsecase(repo, logger)
-	del := delivery.NewDelivery(uc, logger)
+	del := delivery.NewDelivery(uc, logger, hrsvClient)
 
 	router := gin.New()
 	router.Use(
@@ -42,11 +43,11 @@ func InitRouter(db *gorm.DB, logger *logrus.Logger, cache *redis.Client) *gin.En
 
 		// TICKET
 		protectedRoutes.GET("tickets",  del.GetTickets)
-		protectedRoutes.POST("tickets", del.AddTicket)
+		protectedRoutes.POST("tickets", middleware.AdminAccess(),  del.AddTicket)
 		protectedRoutes.PUT("tickets/:id", middleware.AdminAccess(), del.UpdateTicket)
 		protectedRoutes.GET("tickets/:id", del.GetTicketById)
 		protectedRoutes.DELETE("tickets/:id", middleware.AdminAccess(), del.DeleteTicket)
-		protectedRoutes.PUT("tickets/close", middleware.AdminAccess(), del.CloseTicket)
+		protectedRoutes.PUT("tickets/close", del.CloseTicket)
 		protectedRoutes.GET("tickets-summary", del.GetTicketSummary)
 
 		// ACTIVITY
@@ -60,6 +61,13 @@ func InitRouter(db *gorm.DB, logger *logrus.Logger, cache *redis.Client) *gin.En
 		router.GET("/file/serve/:id", del.FileServe)
 		router.GET("/file/serve", del.FileServeByPath)
 		router.GET("/file/download/:id", del.FileDownload)
+
+
+		// HRSV
+		router.GET("/hrsv/users", del.GetHrsvUsers)
+		router.GET("/hrsv/roles", del.GetHrsvRoles)
+		router.GET("/hrsv/sync-users", del.SyncUserDataHrsv)
+		router.POST("/hrsv/sync-password", del.SyncPasswordHrsv)
 	}
 	// AUTH
 	router.POST("/auth/sign-in", del.SignIn)

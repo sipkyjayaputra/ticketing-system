@@ -19,8 +19,8 @@ func (uc *usecase) GetTickets(filter dto.TicketFilter) (*utils.ResponseContainer
 	return utils.BuildSuccessResponse(tickets), nil
 }
 
-func (uc *usecase) GetTicketSummary() (*utils.ResponseContainer, *utils.ErrorContainer) {
-	ticketSummary, err := uc.repo.GetTicketSummary()
+func (uc *usecase) GetTicketSummary(ticket dto.TicketSummaryFilter) (*utils.ResponseContainer, *utils.ErrorContainer) {
+	ticketSummary, err := uc.repo.GetTicketSummary(ticket)
 
 	if err != nil {
 		return nil, utils.BuildInternalErrorResponse("failed to get ticket summary", err.Error())
@@ -47,8 +47,7 @@ func (uc *usecase) AddTicket(ticket dto.Ticket, creator uint) (*utils.ResponseCo
 	return utils.BuildSuccessResponse(nil), nil
 }
 
-func (uc *usecase) UpdateTicket(ticket dto.Ticket, updater uint, ticketNo string) (*utils.ResponseContainer, *utils.ErrorContainer) {
-	ticket.TicketNo = ticketNo
+func (uc *usecase) UpdateTicket(ticket dto.Ticket, updater uint) (*utils.ResponseContainer, *utils.ErrorContainer) {
 	ticket.UpdatedBy = updater
 	ticket.UpdatedAt = time.Now()
 

@@ -11,8 +11,8 @@ type User struct {
 	Password  string     `gorm:"column:password" json:"password,omitempty"` // Password pengguna
 	Email     string     `gorm:"column:email;unique" json:"email"`          // Email pengguna, harus unik
 	Phone     string     `gorm:"column:phone" json:"phone"`          // Email pengguna, harus unik
-	Team     string     `gorm:"column:team" json:"team"`          // Email pengguna, harus unik
-	Workpalce     string  `gorm:"column:workplace" json:"workplace"`          // Email pengguna, harus unik
+	Team      string     `gorm:"column:team" json:"team"`          // Email pengguna, harus unik
+	Workpalce string  `gorm:"column:workplace" json:"workplace"`          // Email pengguna, harus unik
 	Role      string     `gorm:"column:role" json:"role"`
 	Photo     string     `gorm:"column:photo;default:''" json:"photo"`
 	CreatedAt *time.Time `gorm:"autoCreateTime" json:"created_at,omitempty"`
@@ -23,7 +23,7 @@ type User struct {
 
 type Document struct {
 	DocumentID   uint      `gorm:"primaryKey;autoIncrement" json:"document_id"`
-	DocumentNo   string      `gorm:"column:document_no" json:"document_no"`
+	DocumentNo   string    `gorm:"column:document_no" json:"document_no"`
 	ActivityID   uint      `gorm:"column:activity_id" json:"activity_id"`     // Foreign key, references Activity's ActivityID
 	DocumentName string    `gorm:"column:document_name" json:"document_name"` // Name of the document
 	DocumentSize int64     `gorm:"column:document_size" json:"document_size"` // Size of the document in bytes
@@ -80,9 +80,9 @@ type TicketSummary struct {
 	OpenTicketCount    int    `json:"open_ticket_count"`
 	OpenTicketCountLastMonth     int `json:"open_ticket_count_last_month"`
 	OpenTicketNote     string `json:"open_ticket_note"`
-	PendingTicketCount int    `json:"pending_ticket_count"`
-	PendingTicketCountLastMonth  int `json:"pending_ticke_count_last_month"`
-	PendingTicketNote  string `json:"pending_ticket_note"`
+	InProgressTicketCount int    `json:"in_progress_ticket_count"`
+	InProgressTicketCountLastMonth  int `json:"in_progress_ticket_count_last_month"`
+	InProgressTicketNote  string `json:"in_progress_ticket_note"`
 	ClosedTicketCount  int    `json:"closed_ticket_count"`
 	ClosedTicketCountLastMonth   int `json:"closed_ticket_count_last_month"`
 	ClosedTicketNote   string `json:"closed_ticket_note"`

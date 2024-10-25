@@ -26,11 +26,11 @@ type Usecase interface {
 	// TICKET
 	GetTickets(dto.TicketFilter) (*utils.ResponseContainer, *utils.ErrorContainer)
 	AddTicket(dto.Ticket, uint) (*utils.ResponseContainer, *utils.ErrorContainer)
-	UpdateTicket(dto.Ticket, uint, string) (*utils.ResponseContainer, *utils.ErrorContainer)
+	UpdateTicket(dto.Ticket, uint) (*utils.ResponseContainer, *utils.ErrorContainer)
 	CloseTicket(dto.CloseTicket, uint) (*utils.ResponseContainer, *utils.ErrorContainer)
 	DeleteTicket(string) (*utils.ResponseContainer, *utils.ErrorContainer)
 	GetTicketById(string) (*utils.ResponseContainer, *utils.ErrorContainer)
-	GetTicketSummary() (*utils.ResponseContainer, *utils.ErrorContainer)
+	GetTicketSummary(dto.TicketSummaryFilter) (*utils.ResponseContainer, *utils.ErrorContainer)
 
 	// ACTIVITY
 	GetActivitiesByTicketNo(string) (*utils.ResponseContainer, *utils.ErrorContainer)
@@ -41,6 +41,10 @@ type Usecase interface {
 
 	// DOCUMENT
 	GetDocumentById(uint) (*entity.Document, *utils.ErrorContainer)
+
+	// HRSV
+	SyncUserDataHrsv([]dto.UserDataHRSV) (*utils.ResponseContainer, *utils.ErrorContainer)
+	SyncPasswordHrsv(string, string) (*utils.ResponseContainer, *utils.ErrorContainer)
 }
 
 type usecase struct {
