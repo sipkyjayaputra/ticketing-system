@@ -301,28 +301,6 @@ func (repo *repository) AddTicket(ticket dto.Ticket) error {
     })
 }
 
-// UpdateTicket updates an existing ticket in the database
-// func (repo *repository) UpdateTicket(ticket dto.Ticket) error {
-// 	updateTicket := &entity.Ticket{
-// 		TicketNo:   ticket.TicketNo,
-// 		TicketType: ticket.TicketType,
-// 		Subject:    ticket.Subject,
-// 		ReportDate: ticket.ReportDate,
-// 		AssignedID: ticket.AssignedID,
-// 		Priority:   ticket.Priority,
-// 		Status:     ticket.Status,
-// 		Content:    ticket.Content,
-// 		CreatedBy:  ticket.CreatedBy,
-// 		UpdatedBy:  ticket.UpdatedBy,
-// 		CreatedAt:  ticket.CreatedAt,
-// 		UpdatedAt:  ticket.UpdatedAt,
-// 	}
-
-// 	if err := repo.db.Model(&entity.Ticket{}).Where("ticket_id = ?", ticket.TicketID).Updates(&updateTicket).Error; err != nil {
-// 		return err
-// 	}
-// 	return nil
-// }
 func (repo *repository) UpdateTicket(updatedTicket dto.Ticket) error {
     return repo.db.Transaction(func(tx *gorm.DB) error {
         // Ambil tiket yang ingin diperbarui
